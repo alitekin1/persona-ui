@@ -3,9 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 
-const peyda = localFont({
-  src: "../../public/fonts/PeydaWebVF.woff2",
-  variable: "--font-peyda",
+const dana = localFont({
+  src: "../../public/fonts/DanaVF.woff2",
+  variable: "--font-dana",
   display: "swap",
 });
 
@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl" className={`${peyda.variable} ${yekanBakh.variable} dark`}>
+    <html lang="fa" dir="rtl" className={`${dana.variable} ${yekanBakh.variable} dark`}>
       <body className="bg-[#09090b] text-[#f4f4f5] font-yekan antialiased pb-20">
         <ConvexClientProvider>
           {children}

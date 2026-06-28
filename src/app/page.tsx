@@ -10,8 +10,10 @@ export default function Home() {
   const [isNavigating, setIsNavigating] = useState(false);
   
   // Navigation states
-  const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [liveNotifications, setLiveNotifications] = useState<any[]>([
+    { id: 1, title: 'سیستم', message: 'به شبکه آنیما خوش آمدید! پروفایل شما ساخته شد.', time: 'لحظاتی پیش', type: 'system' }
+  ]);
   
   // Create form states
   const [createName, setCreateName] = useState("");
@@ -27,6 +29,7 @@ export default function Home() {
   const characters = charactersResult?.characters || [];
   
   const forYouCharacters = useQuery("characters:getForYouCharacters" as any, telegramId !== "unknown" ? { telegramId, limit: 5 } : { limit: 5 });
+  const myCharacters = useQuery("characters:getMyCharacters" as any, telegramId !== "unknown" ? { creatorId: telegramId } : "skip") || [];
   const categories = useQuery("categories:listCategories" as any, {});
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
   
@@ -81,41 +84,31 @@ export default function Home() {
         description: createDesc,
         imageUrl: createImageUrl || undefined,
         categoryId: createCategory,
+        creatorId: telegramId !== "unknown" ? telegramId : undefined
       });
-      alert("شخصیت با موفقیت ساخته شد!");
-      setActiveTab("characters");
+      
+      // Add notification
+      setLiveNotifications(prev => [
+        { 
+          id: Date.now(), 
+          title: 'شخصیت جدید', 
+          message: `شخصیت "${createName}" با موفقیت ایجاد شد! هم‌اکنون می‌توانید با آن گفتگو کنید.`,
+          time: 'هم‌اکنون',
+          type: 'success'
+        },
+        ...prev
+      ]);
+      
+      // Flash notification icon visually
+      setShowNotifications(true);
+      
+      // Reset form
       setCreateName("");
       setCreateDesc("");
       setCreateImageUrl("");
     } catch (err) {
       alert("خطا در ساخت شخصیت");
     }
-  };
-
-  // --- Panels ---
-  const renderMenu = () => {
-    if (!showMenu) return null;
-    return (
-      <div className="fixed inset-0 z-[100] flex">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMenu(false)} />
-        <div className="relative w-64 bg-cosmic-dark border-l border-cosmic-border h-full p-6 animate-in slide-in-from-right duration-300 ml-auto flex flex-col">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-peyda font-bold font-mono">فهرست</h2>
-            <button onClick={() => setShowMenu(false)} className="text-zinc-400 hover:text-white">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="space-y-4">
-            <button className="w-full text-right p-3 rounded-xl bg-cosmic-surface/50 border border-transparent hover:border-brand-lime transition-colors">قوانین و مقررات</button>
-            <button className="w-full text-right p-3 rounded-xl bg-cosmic-surface/50 border border-transparent hover:border-brand-lime transition-colors">پشتیبانی</button>
-            <button className="w-full text-right p-3 rounded-xl bg-cosmic-surface/50 border border-transparent hover:border-brand-lime transition-colors">درباره ما</button>
-          </div>
-          <div className="mt-auto pt-6 border-t border-cosmic-border text-xs text-zinc-500 text-center font-mono">
-            ANIMA SYSTEM v1.0
-          </div>
-        </div>
-      </div>
-    );
   };
 
   const renderNotifications = () => {
@@ -125,24 +118,22 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
         <div className="relative w-full max-w-md mx-auto bg-cosmic-dark border-t border-cosmic-border h-[60vh] mt-auto rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300 flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-peyda font-bold">اعلان‌ها</h2>
+            <h2 className="text-xl font-dana font-bold">اعلان‌ها</h2>
             <button onClick={() => setShowNotifications(false)} className="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-1">
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-            <div className="p-4 rounded-xl border border-cosmic-border bg-cosmic-surface">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-brand-lime"></span>
-                <span className="text-xs font-peyda font-bold text-brand-lime">سیستم</span>
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
+            {liveNotifications.map(notif => (
+              <div key={notif.id} className="p-4 rounded-xl border border-cosmic-border bg-cosmic-surface">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`w-2 h-2 rounded-full ${notif.type === 'success' ? 'bg-brand-lime' : 'bg-brand-blue'}`}></span>
+                  <span className={`text-xs font-dana font-bold ${notif.type === 'success' ? 'text-brand-lime' : 'text-brand-blue'}`}>{notif.title}</span>
+                </div>
+                <p className="text-sm">{notif.message}</p>
+                <p className="text-xs text-zinc-500 mt-2">{notif.time}</p>
               </div>
-              <p className="text-sm">به شبکه آنیما خوش آمدید! پروفایل شما ساخته شد.</p>
-              <p className="text-xs text-zinc-500 mt-2">۲ ساعت پیش</p>
-            </div>
-            <div className="p-4 rounded-xl border border-cosmic-border bg-cosmic-card">
-              <p className="text-sm">شخصیت "آریا" آپدیت جدیدی دریافت کرد. مکالمه عمیق‌تر شده است.</p>
-              <p className="text-xs text-zinc-500 mt-2">۱ روز پیش</p>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -193,7 +184,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <h2 className="text-2xl font-peyda font-bold mb-2">{char.name}</h2>
+            <h2 className="text-2xl font-dana font-bold mb-2">{char.name}</h2>
             <p className="text-zinc-400 mb-6 px-4">{char.description || char.tagline}</p>
             
             <div className="flex gap-2 justify-center mb-8 flex-wrap">
@@ -206,7 +197,7 @@ export default function Home() {
 
             <button 
               onClick={handleStartChat}
-              className="w-full bg-brand-lime text-black font-peyda font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
+              className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
             >
               <Play className="w-5 h-5 fill-black" />
               شروع چت
@@ -224,27 +215,26 @@ export default function Home() {
         <div className="pb-6">
           {/* Top Bar */}
           <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <button onClick={() => setShowMenu(true)} className="p-2 -mr-2 text-zinc-400 hover:text-white">
-              <Menu className="w-6 h-6" />
-            </button>
             <div className="flex-1 relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
                 type="text" 
-                placeholder="جستجو..." 
+                placeholder="جستجو در شبکه..." 
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
               />
             </div>
             <button onClick={() => setShowNotifications(true)} className="p-2 -ml-2 text-zinc-400 hover:text-white relative">
               <Bell className="w-6 h-6" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-brand-lime rounded-full"></span>
+              {liveNotifications.length > 0 && (
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-lime rounded-full border-2 border-background animate-pulse"></span>
+              )}
             </button>
           </header>
 
           <div className="space-y-8 mt-2 px-4">
             {/* For You Section (Uses Algorithm from DB) */}
             <section>
-              <h2 className="text-lg font-peyda font-bold mb-3">برای شما</h2>
+              <h2 className="text-lg font-dana font-bold mb-3">برای شما</h2>
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
                 {forYouCharacters === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
@@ -270,11 +260,11 @@ export default function Home() {
                         {char.imageUrl ? (
                           <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-peyda font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-peyda font-semibold text-base truncate">{char.name}</h3>
+                        <h3 className="font-dana font-semibold text-base truncate">{char.name}</h3>
                         <p className="text-brand-lime/80 text-xs mt-0.5 truncate">توسط @admin</p>
                         <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2">
                           {char.description || "بدون توضیحات"}
@@ -297,11 +287,11 @@ export default function Home() {
               <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-white font-peyda font-bold text-xs">P</span>
+                    <span className="text-white font-dana font-bold text-xs">P</span>
                   </div>
-                  <span className="text-white font-peyda font-semibold text-sm">چت‌های بدون محدودیت</span>
+                  <span className="text-white font-dana font-semibold text-sm">چت‌های بدون محدودیت</span>
                 </div>
-                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-peyda font-bold">
+                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-dana font-bold">
                   تهیه اشتراک
                 </button>
               </div>
@@ -309,7 +299,7 @@ export default function Home() {
 
             {/* Scenes (Vertical portrait cards) */}
             <section>
-              <h2 className="text-lg font-peyda font-bold mb-3">صحنه‌ها</h2>
+              <h2 className="text-lg font-dana font-bold mb-3">صحنه‌ها</h2>
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
                 {charactersResult === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
@@ -329,7 +319,7 @@ export default function Home() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                       <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <h3 className="font-peyda font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
+                        <h3 className="font-dana font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
                         <p className="text-[10px] text-zinc-300 mt-1 truncate">@admin</p>
                       </div>
                     </div>
@@ -340,7 +330,7 @@ export default function Home() {
 
             {/* Popular / Trending Section */}
             <section>
-              <h2 className="text-lg font-peyda font-bold mb-3">محبوب‌ترین‌ها</h2>
+              <h2 className="text-lg font-dana font-bold mb-3">محبوب‌ترین‌ها</h2>
               <div className="grid grid-cols-1 gap-3">
                 {charactersResult === undefined ? (
                    <div className="h-20 rounded-2xl shimmer border border-cosmic-border" />
@@ -355,11 +345,11 @@ export default function Home() {
                         {char.imageUrl ? (
                           <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-peyda font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <h3 className="font-peyda font-semibold text-sm truncate">{char.name}</h3>
+                        <h3 className="font-dana font-semibold text-sm truncate">{char.name}</h3>
                         <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
                           {char.description || char.tagline || "یک شخصیت جالب"}
                         </p>
@@ -384,13 +374,13 @@ export default function Home() {
       return (
         <div className="p-4 pb-24">
           <header className="mb-8 mt-2">
-            <h1 className="text-2xl font-peyda font-bold tracking-tight">ساخت شخصیت جدید</h1>
+            <h1 className="text-2xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
             <p className="text-zinc-400 text-sm mt-1">شخصیت رویایی خودتان را با ویژگی‌های دلخواه بسازید.</p>
           </header>
           
           <form onSubmit={handleCreateCharacter} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-peyda font-semibold text-zinc-300">نام شخصیت</label>
+              <label className="text-sm font-dana font-semibold text-zinc-300">نام شخصیت</label>
               <input 
                 required
                 value={createName}
@@ -401,7 +391,7 @@ export default function Home() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-peyda font-semibold text-zinc-300">توضیح کوتاه</label>
+              <label className="text-sm font-dana font-semibold text-zinc-300">توضیح کوتاه</label>
               <textarea 
                 required
                 value={createDesc}
@@ -412,7 +402,7 @@ export default function Home() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-peyda font-semibold text-zinc-300 flex items-center justify-between">
+              <label className="text-sm font-dana font-semibold text-zinc-300 flex items-center justify-between">
                 <span>آدرس تصویر (لینک)</span>
                 <span className="text-[10px] text-zinc-500">اختیاری</span>
               </label>
@@ -428,7 +418,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-peyda font-semibold text-zinc-300">دسته‌بندی</label>
+              <label className="text-sm font-dana font-semibold text-zinc-300">دسته‌بندی</label>
               <select 
                 required
                 value={createCategory}
@@ -444,11 +434,49 @@ export default function Home() {
             
             <button 
               type="submit"
-              className="w-full bg-brand-lime text-black font-peyda font-bold py-4 rounded-xl mt-4 hover:bg-[#bbf771] transition-colors active:scale-95"
+              className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl mt-4 hover:bg-[#bbf771] transition-colors active:scale-95"
             >
               ساخت شخصیت
             </button>
           </form>
+
+          {/* User's Created Characters History */}
+          <div className="mt-12 pt-8 border-t border-cosmic-border">
+            <h2 className="text-xl font-dana font-bold tracking-tight mb-4 flex items-center justify-between">
+              <span>شخصیت‌های شما</span>
+              <span className="text-xs bg-zinc-800 px-2 py-1 rounded-md text-zinc-400">{myCharacters.length}</span>
+            </h2>
+            
+            <div className="grid grid-cols-1 gap-3">
+              {myCharacters.length === 0 ? (
+                <div className="text-center py-8 text-zinc-500 text-sm">
+                  هنوز شخصیتی نساخته‌اید.
+                </div>
+              ) : (
+                myCharacters.map((char: any) => (
+                  <div 
+                    key={char._id} 
+                    onClick={() => handleCharClick(char)}
+                    className="bg-cosmic-card border border-cosmic-border/50 rounded-2xl p-3 flex gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                      {char.imageUrl ? (
+                        <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-lg text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <h3 className="font-dana font-semibold text-sm truncate">{char.name}</h3>
+                      <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
+                        {char.description || char.tagline || "یک شخصیت جالب"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       );
     }
@@ -457,7 +485,7 @@ export default function Home() {
       return (
         <div className="p-4">
           <header className="mb-8">
-            <h1 className="text-2xl font-peyda font-bold tracking-tight">حساب کاربری</h1>
+            <h1 className="text-2xl font-dana font-bold tracking-tight">حساب کاربری</h1>
           </header>
 
           <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-6 text-center mb-6 relative overflow-hidden">
@@ -478,11 +506,26 @@ export default function Home() {
           </div>
 
           <div className="space-y-3">
-            <button className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
+            <div className="w-full bg-cosmic-surface border border-brand-lime/20 rounded-xl p-4 flex justify-between items-center relative overflow-hidden">
+              <div className="absolute right-0 top-0 bottom-0 w-1 bg-brand-lime"></div>
+              <div className="flex flex-col">
+                <span className="font-dana font-bold text-brand-lime">وضعیت شبکه‌سازی</span>
+                <span className="text-xs text-zinc-400 mt-1">{myCharacters.length} شخصیت فعال (Live)</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-brand-lime">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-lime opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-lime"></span>
+                </span>
+                متصل
+              </div>
+            </div>
+
+            <button className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
               <span>تاریخچه چت‌ها</span>
               <ChevronLeft className="w-5 h-5 text-zinc-500" />
             </button>
-            <button className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
+            <button className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
               <span>تنظیمات مود</span>
               <ChevronLeft className="w-5 h-5 text-zinc-500" />
             </button>
@@ -499,7 +542,6 @@ export default function Home() {
       </main>
 
       {/* Overlays */}
-      {renderMenu()}
       {renderNotifications()}
 
       {/* Bottom Navigation */}
