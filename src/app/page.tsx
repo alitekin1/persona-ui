@@ -26,8 +26,8 @@ export default function Home() {
   const charactersResult = useQuery("characters:listCharacters" as any, {});
   const characters = charactersResult?.characters || [];
   
-  const forYouCharacters = useQuery("characters:getForYouCharacters" as any, telegramId !== "unknown" ? { telegramId, limit: 5 } : { limit: 5 }) || [];
-  const categories = useQuery("categories:listCategories" as any, {}) || [];
+  const forYouCharacters = useQuery("characters:getForYouCharacters" as any, telegramId !== "unknown" ? { telegramId, limit: 5 } : { limit: 5 });
+  const categories = useQuery("categories:listCategories" as any, {});
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
   
   const createCharacter = useMutation("characters:createCharacterBasic" as any);
@@ -246,7 +246,7 @@ export default function Home() {
             <section>
               <h2 className="text-lg font-bold mb-3">برای شما</h2>
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
-                {forYouCharacters.length === 0 ? (
+                {forYouCharacters === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 shimmer">
                       <div className="w-20 h-20 rounded-xl bg-zinc-800/50 shrink-0" />
@@ -257,6 +257,8 @@ export default function Home() {
                       </div>
                     </div>
                   ))
+                ) : forYouCharacters.length === 0 ? (
+                  <p className="text-zinc-500 text-sm">شخصیتی یافت نشد.</p>
                 ) : (
                   forYouCharacters.map((char: any) => (
                     <div 
@@ -434,7 +436,7 @@ export default function Home() {
                 className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 px-4 focus:border-brand-lime outline-none transition-colors appearance-none"
               >
                 <option value="" disabled>یک دسته انتخاب کنید</option>
-                {categories.map((c: any) => (
+                {categories?.map((c: any) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
               </select>
