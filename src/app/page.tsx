@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft } from "lucide-react";
-import WebApp from "@twa-dev/sdk";
+import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, Menu, Bell, MessageCircle } from "lucide-react";
 import { useQuery } from "convex/react";
 
 export default function Home() {
@@ -19,26 +18,34 @@ export default function Home() {
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
 
   useEffect(() => {
-    // Notify Telegram Mini App that the app is ready and expand
-    if (typeof window !== "undefined" && WebApp.initData) {
-      WebApp.ready();
-      WebApp.expand();
-      
-      // Extract user info from Telegram WebApp
-      const user = WebApp.initDataUnsafe?.user;
-      if (user?.id) {
-        setTelegramId(user.id.toString());
-      }
+    // Dynamically import Telegram WebApp SDK to avoid SSR window is not defined error
+    if (typeof window !== "undefined") {
+      import("@twa-dev/sdk").then((module) => {
+        const WebApp = module.default;
+        if (WebApp.initData) {
+          WebApp.ready();
+          WebApp.expand();
+          
+          const user = WebApp.initDataUnsafe?.user;
+          if (user?.id) {
+            setTelegramId(user.id.toString());
+          }
+        }
+      });
     }
   }, []);
 
-  const handleStartChat = () => {
-    if (typeof window !== "undefined" && WebApp.initData) {
-      WebApp.sendData(JSON.stringify({ action: "start_chat", characterId: selectedChar._id }));
-      WebApp.close();
-    } else {
-      alert("در تلگرام: بات مطلع شده و مینی‌اپ بسته می‌شود تا چت شروع شود.");
+  const handleStartChat = async () => {
+    if (typeof window !== "undefined") {
+      const module = await import("@twa-dev/sdk");
+      const WebApp = module.default;
+      if (WebApp.initData) {
+        WebApp.sendData(JSON.stringify({ action: "start_chat", characterId: selectedChar._id }));
+        WebApp.close();
+        return;
+      }
     }
+    alert("در تلگرام: بات مطلع شده و مینی‌اپ بسته می‌شود تا چت شروع شود.");
   };
 
   const renderContent = () => {
@@ -52,7 +59,7 @@ export default function Home() {
             className="flex items-center text-zinc-400 mb-6 hover:text-white transition-colors"
           >
             <ChevronLeft className="w-5 h-5 ml-1" />
-            بازگشت به لیست
+            بازگشت
           </button>
           
           <div className="flex flex-col items-center text-center">
@@ -81,7 +88,7 @@ export default function Home() {
               className="w-full bg-brand-lime text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95"
             >
               <Play className="w-5 h-5 fill-black" />
-              شروع چت در تلگرام
+              شروع چت
             </button>
           </div>
         </div>
@@ -89,69 +96,163 @@ export default function Home() {
     }
 
     if (activeTab === "characters") {
+      // Create mock sub-lists from the main data to simulate categories
+      const forYou = characters.slice(0, 3);
+      const scenes = characters.slice(2, 6);
+      const trending = characters.slice(1, 5);
+
       return (
-        <div className="p-4">
-          <header className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">شخصیت‌ها</h1>
-            <p className="text-zinc-400 text-sm mt-1">با چه کسی می‌خواهید صحبت کنید؟</p>
+        <div className="pb-6">
+          {/* Top Bar */}
+          <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+            <button className="p-2 -mr-2 text-zinc-400 hover:text-white">
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="flex-1 relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <input 
+                type="text" 
+                placeholder="جستجو..." 
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
+            <button className="p-2 -ml-2 text-zinc-400 hover:text-white">
+              <Bell className="w-6 h-6" />
+            </button>
           </header>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-zinc-500" />
-            </div>
-            <input 
-              type="text" 
-              placeholder="جستجو..." 
-              className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 pr-10 pl-4 text-sm focus:outline-none focus:border-brand-lime transition-colors"
-            />
-          </div>
-
-          <div className="grid gap-4">
-            {charactersResult === undefined ? (
-              // Loading Skeleton
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex gap-4 animate-pulse">
-                  <div className="w-16 h-16 rounded-lg bg-zinc-800 shrink-0" />
-                  <div className="flex-1 space-y-3 py-1">
-                    <div className="h-4 bg-zinc-800 rounded w-1/2" />
-                    <div className="h-3 bg-zinc-800 rounded w-full" />
-                    <div className="h-3 bg-zinc-800 rounded w-4/5" />
-                  </div>
-                </div>
-              ))
-            ) : characters.length === 0 ? (
-              <div className="text-center text-zinc-500 py-10">شخصیتی یافت نشد.</div>
-            ) : (
-              characters.map((char: any) => (
-                <div 
-                  key={char._id} 
-                  onClick={() => setSelectedChar(char)}
-                  className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex gap-4 cursor-pointer hover:border-zinc-700 transition-colors active:scale-[0.98]"
-                >
-                  <div className="w-16 h-16 rounded-lg bg-zinc-800 overflow-hidden shrink-0 flex flex-col items-center justify-center">
-                    {char.imageUrl ? (
-                      <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xl text-zinc-500 font-bold">{char.name.charAt(0)}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-semibold text-lg">{char.name}</h3>
-                      {char.popularity !== undefined && (
-                        <span className="text-[10px] text-zinc-500 flex items-center gap-1 bg-zinc-900 px-2 py-0.5 rounded-full">
-                          🔥 {char.popularity}
-                        </span>
-                      )}
+          <div className="space-y-8 mt-2 px-4">
+            {/* For You Section */}
+            <section>
+              <h2 className="text-lg font-bold mb-3">برای شما</h2>
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
+                {charactersResult === undefined ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 animate-pulse">
+                      <div className="w-20 h-20 rounded-xl bg-zinc-800 shrink-0" />
+                      <div className="flex-1 space-y-3 py-1">
+                        <div className="h-4 bg-zinc-800 rounded w-1/2" />
+                        <div className="h-3 bg-zinc-800 rounded w-full" />
+                        <div className="h-3 bg-zinc-800 rounded w-4/5" />
+                      </div>
                     </div>
-                    <p className="text-zinc-400 text-sm line-clamp-2 mt-1">
-                      {char.description || char.tagline}
-                    </p>
+                  ))
+                ) : (
+                  forYou.map((char: any) => (
+                    <div 
+                      key={char._id} 
+                      onClick={() => setSelectedChar(char)}
+                      className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                    >
+                      <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                        {char.imageUrl ? (
+                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base truncate">{char.name}</h3>
+                        <p className="text-brand-lime/80 text-xs mt-0.5 truncate">توسط @admin</p>
+                        <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2">
+                          {char.description || "بدون توضیحات"}
+                        </p>
+                        {char.popularity !== undefined && (
+                          <div className="flex items-center gap-1 mt-2 text-zinc-500 text-xs">
+                            <MessageCircle className="w-3 h-3" />
+                            <span>{char.popularity}k</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* Banner Ad / Premium CTA */}
+            <section>
+              <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">P</span>
                   </div>
+                  <span className="text-white font-semibold text-sm">چت‌های بدون محدودیت</span>
                 </div>
-              ))
-            )}
+                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-bold">
+                  تهیه اشتراک
+                </button>
+              </div>
+            </section>
+
+            {/* Scenes (Vertical portrait cards) */}
+            <section>
+              <h2 className="text-lg font-bold mb-3">صحنه‌ها</h2>
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
+                {charactersResult === undefined ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="snap-start shrink-0 w-[140px] h-[200px] rounded-2xl bg-zinc-800 animate-pulse" />
+                  ))
+                ) : (
+                  scenes.map((char: any) => (
+                    <div 
+                      key={char._id}
+                      onClick={() => setSelectedChar(char)}
+                      className="relative snap-start shrink-0 w-[140px] h-[200px] rounded-2xl overflow-hidden cursor-pointer group"
+                    >
+                      {char.imageUrl ? (
+                        <img src={char.imageUrl} alt={char.name} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                      <div className="absolute bottom-3 left-3 right-3 text-white">
+                        <h3 className="font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
+                        <p className="text-[10px] text-zinc-300 mt-1 truncate">@admin</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* Popular / Trending Section */}
+            <section>
+              <h2 className="text-lg font-bold mb-3">محبوب‌ترین‌ها</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {charactersResult === undefined ? (
+                   <div className="h-20 rounded-2xl bg-zinc-800 animate-pulse" />
+                ) : (
+                  trending.map((char: any) => (
+                    <div 
+                      key={char._id} 
+                      onClick={() => setSelectedChar(char)}
+                      className="bg-cosmic-surface rounded-2xl p-3 flex gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                        {char.imageUrl ? (
+                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <h3 className="font-semibold text-sm truncate">{char.name}</h3>
+                        <p className="text-zinc-400 text-xs mt-1 truncate">
+                          {char.description || char.tagline}
+                        </p>
+                        {char.popularity !== undefined && (
+                          <div className="flex items-center gap-1 mt-1.5 text-zinc-500 text-[10px]">
+                            <MessageCircle className="w-3 h-3" />
+                            <span>{char.popularity}k پیام</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
           </div>
         </div>
       );
@@ -222,29 +323,26 @@ export default function Home() {
       {/* Bottom Navigation */}
       {selectedChar === null && (
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50">
-          <div className="flex justify-around items-center h-20 px-6">
+          <div className="flex justify-around items-center h-16 px-6">
             <button 
               onClick={() => setActiveTab("characters")}
-              className={`flex flex-col items-center gap-1.5 transition-colors ${activeTab === "characters" ? "text-brand-lime" : "text-zinc-500"}`}
+              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "characters" ? "text-white" : "text-zinc-500"}`}
             >
-              <MessageSquare className="w-6 h-6" />
-              <span className="text-[10px] font-medium">شخصیت‌ها</span>
+              <MessageSquare className={`w-6 h-6 ${activeTab === "characters" ? "fill-white" : ""}`} />
             </button>
             
             <button 
               onClick={() => setActiveTab("create")}
-              className={`flex flex-col items-center gap-1.5 transition-colors ${activeTab === "create" ? "text-brand-lime" : "text-zinc-500"}`}
+              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "create" ? "text-white" : "text-zinc-500"}`}
             >
-              <PlusCircle className="w-6 h-6" />
-              <span className="text-[10px] font-medium">ساختن</span>
+              <PlusCircle className={`w-6 h-6 ${activeTab === "create" ? "fill-white" : ""}`} />
             </button>
             
             <button 
               onClick={() => setActiveTab("profile")}
-              className={`flex flex-col items-center gap-1.5 transition-colors ${activeTab === "profile" ? "text-brand-lime" : "text-zinc-500"}`}
+              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "profile" ? "text-white" : "text-zinc-500"}`}
             >
-              <User className="w-6 h-6" />
-              <span className="text-[10px] font-medium">پروفایل</span>
+              <User className={`w-6 h-6 ${activeTab === "profile" ? "fill-white" : ""}`} />
             </button>
           </div>
         </nav>
