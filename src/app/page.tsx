@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, Menu, Bell, MessageCircle, X } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("characters");
@@ -16,10 +16,9 @@ export default function Home() {
   ]);
   
   // Create form states
-  const [createName, setCreateName] = useState("");
-  const [createDesc, setCreateDesc] = useState("");
-  const [createImageUrl, setCreateImageUrl] = useState("");
-  const [createCategory, setCreateCategory] = useState("");
+  const [createPrompt, setCreatePrompt] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -35,7 +34,15 @@ export default function Home() {
   const categories = useQuery("categories:listCategories" as any, {});
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
   
-  const createCharacter = useMutation("characters:createCharacterBasic" as any);
+  const createPendingCharacter = useMutation("characters:createPending" as any);
+  const triggerGeneration = useAction("actions.agent:triggerGeneration" as any);
+  const updateCharacter = useMutation("characters:updateCharacter" as any);
+  
+  const [editingChar, setEditingChar] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editIsPublic, setEditIsPublic] = useState(true);
+  
   const history = useQuery("conversations:listUserConversations" as any, user ? { userId: user._id, pageSize: 20 } : "skip");
 
   useEffect(() => {
@@ -54,6 +61,64 @@ export default function Home() {
       });
     }
   }, []);
+
+  
+  const handleCreateCharacter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createPrompt || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      const characterId = await createPendingCharacter({
+        prompt: createPrompt,
+        creatorId: telegramId !== "unknown" ? telegramId : "guest",
+        isPublic: isPublic
+      });
+      
+      await triggerGeneration({
+        characterId,
+        prompt: createPrompt,
+        creatorId: telegramId !== "unknown" ? telegramId : "guest",
+        isPublic: isPublic
+      });
+      
+      setLiveNotifications(prev => [
+        { 
+          id: Date.now(), 
+          title: 'در حال ساخت...', 
+          message: 'شخصیت شما در حال پردازش است. پس از اتمام، ربات به شما پیام خواهد داد. می‌توانید مینی‌اپ را ببندید.', 
+          time: 'هم‌اکنون', 
+          type: 'success' 
+        },
+        ...prev
+      ]);
+      setShowNotifications(true);
+      setCreatePrompt("");
+      setActiveTab("characters");
+    } catch (e) {
+      console.error(e);
+      alert("خطایی در ارتباط با سرور ساخت کاراکتر رخ داد.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateCharacter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingChar || !editName || !editDesc) return;
+    try {
+      await updateCharacter({
+        characterId: editingChar._id,
+        name: editName,
+        description: editDesc,
+        isPublic: editIsPublic
+      });
+      setEditingChar(null);
+    } catch (e) {
+      console.error(e);
+      alert("خطا در ذخیره تغییرات.");
+    }
+  };
 
   const handleCharClick = (char: any) => {
     setIsNavigating(true);
@@ -87,42 +152,7 @@ export default function Home() {
     }
   };
 
-  const handleCreateCharacter = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!createName || !createDesc || !createCategory) return;
-    
-    try {
-      await createCharacter({
-        name: createName,
-        description: createDesc,
-        imageUrl: createImageUrl || undefined,
-        categoryId: createCategory,
-        creatorId: telegramId !== "unknown" ? telegramId : undefined
-      });
-      
-      // Add notification
-      setLiveNotifications(prev => [
-        { 
-          id: Date.now(), 
-          title: 'شخصیت جدید', 
-          message: `شخصیت "${createName}" با موفقیت ایجاد شد! هم‌اکنون می‌توانید با آن گفتگو کنید.`,
-          time: 'هم‌اکنون',
-          type: 'success'
-        },
-        ...prev
-      ]);
-      
-      // Flash notification icon visually
-      setShowNotifications(true);
-      
-      // Reset form
-      setCreateName("");
-      setCreateDesc("");
-      setCreateImageUrl("");
-    } catch (err) {
-      alert("خطا در ساخت شخصیت");
-    }
-  };
+  
 
   const renderNotifications = () => {
     if (!showNotifications) return null;
@@ -211,7 +241,23 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="px-6 pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] flex-none bg-cosmic-bg border-t border-cosmic-border/50">
+          
+          <div className="px-6 pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] flex-none bg-cosmic-bg border-t border-cosmic-border/50 flex gap-3">
+            {(char.creatorId === telegramId && telegramId !== "unknown") && (
+              <button 
+                onClick={() => {
+                  setEditName(char.name);
+                  setEditDesc(char.description);
+                  setEditIsPublic(char.isPublic !== false);
+                  setEditingChar(char);
+                  setSelectedChar(null);
+                }}
+                className="bg-zinc-800 text-white font-dana font-bold py-3.5 px-4 rounded-xl flex items-center justify-center hover:bg-zinc-700 transition-colors active:scale-95 shrink-0"
+              >
+                ویرایش
+              </button>
+            )}
+
             <button 
               onClick={handleStartChat}
               className="w-full bg-brand-lime text-black font-dana font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
@@ -387,113 +433,105 @@ export default function Home() {
       );
     }
 
+    if (editingChar !== null) {
+      return (
+        <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="p-4 flex-none border-b border-cosmic-border/30">
+            <button 
+              onClick={() => setEditingChar(null)}
+              className="flex items-center text-zinc-400 hover:text-white transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6 ml-1" />
+              <span className="font-dana font-medium text-lg">بازگشت</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            <h2 className="text-xl font-dana font-bold mb-6">ویرایش شخصیت</h2>
+            <form onSubmit={handleUpdateCharacter} className="space-y-4">
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">نام شخصیت</label>
+                <input 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">توضیحات کوتاه</label>
+                <textarea 
+                  value={editDesc}
+                  onChange={(e) => setEditDesc(e.target.value)}
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[100px]"
+                  required
+                />
+              </div>
+              <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl p-4">
+                <span className="text-sm">نمایش عمومی (Public)</span>
+                <button 
+                  type="button"
+                  onClick={() => setEditIsPublic(!editIsPublic)}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${editIsPublic ? 'bg-brand-lime' : 'bg-zinc-600'}`}
+                >
+                  <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${editIsPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
+                </button>
+              </div>
+              <button 
+                type="submit"
+                className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl mt-6 active:scale-95 transition-transform"
+              >
+                ذخیره تغییرات
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
     if (activeTab === "create") {
       return (
-        <div className="p-4 pb-24">
-          <header className="mb-8 mt-2">
-            <h1 className="text-2xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
-            <p className="text-zinc-400 text-sm mt-1">شخصیت رویایی خودتان را با ویژگی‌های دلخواه بسازید.</p>
+        <div className="p-4 animate-in fade-in duration-300">
+          <header className="mb-6 mt-2">
+            <h1 className="text-xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
+            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+              توضیح دهید که چه شخصیتی با چه ویژگی‌هایی می‌خواهید. هوش مصنوعی آن را برای شما می‌سازد.
+            </p>
           </header>
-          
-          <form onSubmit={handleCreateCharacter} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-dana font-semibold text-zinc-300">نام شخصیت</label>
-              <input 
-                required
-                value={createName}
-                onChange={e => setCreateName(e.target.value)}
-                placeholder="مثال: فرمانده کهکشان..."
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 px-4 focus:border-brand-lime outline-none transition-colors"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-dana font-semibold text-zinc-300">توضیح کوتاه</label>
+
+          <form onSubmit={handleCreateCharacter} className="space-y-5">
+            <div>
+              <label className="block text-sm text-zinc-300 mb-2">توضیحات (Prompt)</label>
               <textarea 
+                value={createPrompt}
+                onChange={(e) => setCreatePrompt(e.target.value)}
+                placeholder="مثلاً: یک فیلسوف بدبین که با طنز تلخ به سوالات جواب می‌دهد و به سبک قرن ۱۹ حرف می‌زند..."
+                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[150px] placeholder:text-zinc-600 resize-none leading-relaxed text-sm"
                 required
-                value={createDesc}
-                onChange={e => setCreateDesc(e.target.value)}
-                placeholder="درباره این شخصیت توضیح دهید..."
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 px-4 h-24 focus:border-brand-lime outline-none transition-colors resize-none"
               />
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-dana font-semibold text-zinc-300 flex items-center justify-between">
-                <span>آدرس تصویر (لینک)</span>
-                <span className="text-[10px] text-zinc-500">اختیاری</span>
-              </label>
-              <input 
-                value={createImageUrl}
-                onChange={e => setCreateImageUrl(e.target.value)}
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 px-4 focus:border-brand-lime outline-none transition-colors text-left"
-                dir="ltr"
-              />
-              <p className="text-xs text-zinc-500">در دیتابیس بستر لازم (imageUrl) آماده است. در آینده آپلود مستقیم اضافه می‌شود.</p>
+            <div className="flex items-center justify-between bg-cosmic-surface border border-cosmic-border rounded-xl p-4">
+              <div>
+                <span className="block text-sm text-white">شخصیت عمومی باشد؟</span>
+                <span className="block text-xs text-zinc-500 mt-1">امکان استفاده توسط سایر کاربران</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsPublic(!isPublic)}
+                className={`w-12 h-6 rounded-full relative transition-colors ${isPublic ? 'bg-brand-lime' : 'bg-zinc-600'}`}
+              >
+                <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${isPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-dana font-semibold text-zinc-300">دسته‌بندی</label>
-              <select 
-                required
-                value={createCategory}
-                onChange={e => setCreateCategory(e.target.value)}
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl py-3 px-4 focus:border-brand-lime outline-none transition-colors appearance-none"
-              >
-                <option value="" disabled>یک دسته انتخاب کنید</option>
-                {categories?.map((c: any) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            
             <button 
               type="submit"
-              className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl mt-4 hover:bg-[#bbf771] transition-colors active:scale-95"
+              disabled={isSubmitting}
+              className={`w-full font-dana font-bold py-3.5 rounded-xl transition-colors ${isSubmitting ? 'bg-zinc-600 text-zinc-400' : 'bg-brand-lime text-black hover:bg-[#bbf771] active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]'}`}
             >
-              ساخت شخصیت
+              {isSubmitting ? 'در حال ارسال درخواست...' : 'تولید شخصیت با هوش مصنوعی'}
             </button>
           </form>
-
-          {/* User's Created Characters History */}
-          <div className="mt-12 pt-8 border-t border-cosmic-border">
-            <h2 className="text-xl font-dana font-bold tracking-tight mb-4 flex items-center justify-between">
-              <span>شخصیت‌های شما</span>
-              <span className="text-xs bg-zinc-800 px-2 py-1 rounded-md text-zinc-400">{myCharacters.length}</span>
-            </h2>
-            
-            <div className="grid grid-cols-1 gap-3">
-              {myCharacters.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500 text-sm">
-                  هنوز شخصیتی نساخته‌اید.
-                </div>
-              ) : (
-                myCharacters.map((char: any) => (
-                  <div 
-                    key={char._id} 
-                    onClick={() => handleCharClick(char)}
-                    className="bg-cosmic-card border border-cosmic-border/50 rounded-2xl p-3 flex gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
-                      {char.imageUrl ? (
-                        <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-lg text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <h3 className="font-dana font-semibold text-sm truncate">{char.name}</h3>
-                      <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
-                        {char.description || char.tagline || "یک شخصیت جالب"}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </div>
       );
     }
