@@ -453,7 +453,7 @@ export default function Home() {
                 <input 
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base"
                   required
                 />
               </div>
@@ -462,7 +462,7 @@ export default function Home() {
                 <textarea 
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[100px]"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[100px] text-base"
                   required
                 />
               </div>
@@ -505,7 +505,7 @@ export default function Home() {
                 value={createPrompt}
                 onChange={(e) => setCreatePrompt(e.target.value)}
                 placeholder="مثلاً: یک فیلسوف بدبین که با طنز تلخ به سوالات جواب می‌دهد و به سبک قرن ۱۹ حرف می‌زند..."
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[150px] placeholder:text-zinc-600 resize-none leading-relaxed text-sm"
+                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[150px] placeholder:text-zinc-600 resize-none leading-relaxed text-base"
                 required
               />
             </div>
