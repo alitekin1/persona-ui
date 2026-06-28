@@ -20,6 +20,8 @@ export default function Home() {
   const [createDesc, setCreateDesc] = useState("");
   const [createImageUrl, setCreateImageUrl] = useState("");
   const [createCategory, setCreateCategory] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Local state for Telegram user data
   const [telegramId, setTelegramId] = useState<string>("unknown");
@@ -34,6 +36,7 @@ export default function Home() {
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
   
   const createCharacter = useMutation("characters:createCharacterBasic" as any);
+  const history = useQuery("conversations:listUserConversations" as any, user ? { userId: user._id, pageSize: 20 } : "skip");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -172,42 +175,46 @@ export default function Home() {
       const char = selectedChar;
 
       return (
-        <div className="p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <button 
-            onClick={() => setSelectedChar(null)}
-            className="flex items-center text-zinc-400 mb-6 hover:text-white transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 ml-1" />
-            بازگشت
-          </button>
+        <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="p-4 flex-none">
+            <button 
+              onClick={() => setSelectedChar(null)}
+              className="flex items-center text-zinc-400 hover:text-white transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 ml-1" />
+              <span className="font-dana font-medium">بازگشت</span>
+            </button>
+          </div>
           
-          <div className="flex flex-col items-center text-center">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-cosmic-border mb-4 bg-zinc-800">
+          <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col items-center text-center">
+            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-cosmic-border mb-4 bg-zinc-800 shrink-0">
               {char.imageUrl ? (
                 <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl text-zinc-500">
+                <div className="w-full h-full flex items-center justify-center text-3xl text-zinc-500">
                   {char.name.charAt(0)}
                 </div>
               )}
             </div>
-            <h2 className="text-2xl font-dana font-bold mb-2">{char.name}</h2>
-            <p className="text-zinc-400 mb-6 px-4">{char.description || char.tagline}</p>
+            <h2 className="text-xl font-dana font-bold mb-3">{char.name}</h2>
+            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{char.description || char.tagline}</p>
             
-            <div className="flex gap-2 justify-center mb-8 flex-wrap">
+            <div className="flex gap-2 justify-center mb-4 flex-wrap">
               {char.tags?.map((tag: string) => (
                 <span key={tag} className="px-3 py-1 bg-cosmic-surface border border-cosmic-border rounded-full text-xs text-brand-lime">
                   {tag}
                 </span>
               ))}
             </div>
+          </div>
 
+          <div className="p-4 flex-none bg-cosmic-bg border-t border-cosmic-border/50 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button 
               onClick={handleStartChat}
-              className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
+              className="w-full bg-brand-lime text-black font-dana font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
             >
               <Play className="w-5 h-5 fill-black" />
-              شروع چت
+              <span className="text-base">شروع چت</span>
             </button>
           </div>
         </div>
@@ -489,25 +496,108 @@ export default function Home() {
     }
 
     if (activeTab === "profile") {
+      if (showHistory) {
+        return (
+          <div className="flex flex-col h-screen bg-cosmic-bg animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="p-4 flex-none border-b border-cosmic-border/30">
+              <button 
+                onClick={() => setShowHistory(false)}
+                className="flex items-center text-zinc-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6 ml-1" />
+                <span className="font-dana font-medium text-lg">بازگشت</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <h2 className="text-xl font-dana font-bold mb-6">تاریخچه چت‌ها</h2>
+              {!history ? (
+                <div className="space-y-3">
+                  {[1,2,3].map(i => <div key={i} className="h-16 bg-zinc-800 rounded-xl shimmer" />)}
+                </div>
+              ) : history.length === 0 ? (
+                <p className="text-zinc-500 text-center py-10">تاریخچه‌ای یافت نشد.</p>
+              ) : (
+                <div className="space-y-3">
+                  {history.map((conv: any) => {
+                     const char = characters.find((c: any) => c._id === conv.characterId);
+                     return (
+                       <div key={conv._id} className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0">
+                              {char?.imageUrl ? <img src={char.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">{char?.name?.charAt(0) || '?'}</div>}
+                           </div>
+                           <div>
+                             <h3 className="font-dana font-medium">{char?.name || 'شخصیت ناشناس'}</h3>
+                             <p className="text-xs text-zinc-500">{new Date(conv.updatedAt || conv.createdAt).toLocaleDateString('fa-IR')}</p>
+                           </div>
+                         </div>
+                       </div>
+                     );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      if (showSettings) {
+        return (
+          <div className="flex flex-col h-screen bg-cosmic-bg animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="p-4 flex-none border-b border-cosmic-border/30">
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="flex items-center text-zinc-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6 ml-1" />
+                <span className="font-dana font-medium text-lg">بازگشت</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <h2 className="text-xl font-dana font-bold mb-6">تنظیمات مود</h2>
+              <div className="space-y-4">
+                <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center">
+                  <span>مود تاریک (Dark Mode)</span>
+                  <div className="w-12 h-6 bg-brand-lime rounded-full relative">
+                    <div className="w-4 h-4 bg-black rounded-full absolute left-1 top-1"></div>
+                  </div>
+                </div>
+                <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex flex-col gap-2">
+                  <span>تم اپلیکیشن</span>
+                  <select className="bg-zinc-800 text-white p-2 rounded-lg border border-zinc-700 outline-none">
+                    <option>کیهانی (Cosmic)</option>
+                    <option>ساده (Minimal)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div className="p-4">
-          <header className="mb-8">
-            <h1 className="text-2xl font-dana font-bold tracking-tight">حساب کاربری</h1>
+        <div className="p-4 animate-in fade-in duration-300">
+          <header className="mb-6 mt-2">
+            <h1 className="text-xl font-dana font-bold tracking-tight">حساب کاربری</h1>
           </header>
 
           <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-6 text-center mb-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-brand-lime"></div>
-            <p className="text-zinc-400 mb-2">شناسه تلگرام شما</p>
+            <p className="text-sm text-zinc-400 mb-2">شناسه تلگرام شما</p>
             {user === undefined && telegramId !== "unknown" ? (
-              <div className="h-10 bg-zinc-800 rounded w-1/2 mx-auto shimmer" />
+              <div className="h-8 bg-zinc-800 rounded w-1/2 mx-auto shimmer" />
             ) : (
-              <div className="text-3xl font-extrabold font-mono text-brand-lime">
+              <div className="text-2xl font-bold font-mono text-brand-lime truncate">
                 {user?.username ? `@${user.username}` : telegramId}
               </div>
             )}
-            {user?.onboarded && (
-               <span className="inline-block mt-3 px-3 py-1 bg-cosmic-surface border border-cosmic-border rounded-full text-xs text-brand-lime">
-                 تکمیل ثبت‌نام
+            {user?.onboarded ? (
+               <span className="inline-block mt-3 px-3 py-1 bg-brand-lime/10 border border-brand-lime/30 rounded-full text-xs text-brand-lime">
+                 ✓ ثبت‌نام شده
+               </span>
+            ) : (
+               <span className="inline-block mt-3 px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-full text-xs text-zinc-400">
+                 کاربر مهمان
                </span>
             )}
           </div>
@@ -515,11 +605,11 @@ export default function Home() {
           <div className="space-y-3">
             <div className="w-full bg-cosmic-surface border border-brand-lime/20 rounded-xl p-4 flex justify-between items-center relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 w-1 bg-brand-lime"></div>
-              <div className="flex flex-col">
-                <span className="font-dana font-bold text-brand-lime">وضعیت شبکه‌سازی</span>
+              <div className="flex flex-col text-right">
+                <span className="font-dana font-bold text-brand-lime text-sm">وضعیت شبکه‌سازی</span>
                 <span className="text-xs text-zinc-400 mt-1">{myCharacters.length} شخصیت فعال (Live)</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-brand-lime">
+              <div className="flex items-center gap-1.5 text-xs text-brand-lime bg-brand-lime/10 px-2 py-1 rounded-md">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-lime opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-lime"></span>
@@ -528,13 +618,13 @@ export default function Home() {
               </div>
             </div>
 
-            <button className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
-              <span>تاریخچه چت‌ها</span>
-              <ChevronLeft className="w-5 h-5 text-zinc-500" />
+            <button onClick={() => setShowHistory(true)} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
+              <span className="text-sm">تاریخچه چت‌ها</span>
+              <ChevronLeft className="w-4 h-4 text-zinc-500" />
             </button>
-            <button className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
-              <span>تنظیمات مود</span>
-              <ChevronLeft className="w-5 h-5 text-zinc-500" />
+            <button onClick={() => setShowSettings(true)} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
+              <span className="text-sm">تنظیمات مود</span>
+              <ChevronLeft className="w-4 h-4 text-zinc-500" />
             </button>
           </div>
         </div>
