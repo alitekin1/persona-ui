@@ -19,6 +19,7 @@ export default function Home() {
   const [createPrompt, setCreatePrompt] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [animatingBox, setAnimatingBox] = useState<{ active: boolean, text: string }>({ active: false, text: "" });
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -68,6 +69,8 @@ export default function Home() {
     if (!createPrompt || isSubmitting) return;
     
     setIsSubmitting(true);
+    setAnimatingBox({ active: true, text: createPrompt.substring(0, 50) + "..." });
+    
     try {
       const characterId = await createPendingCharacter({
         prompt: createPrompt,
@@ -83,26 +86,17 @@ export default function Home() {
         isPublic: isPublic
       });
       
-      // Animation delay
+      // Give the animation time to play out
       setTimeout(() => {
-        setLiveNotifications(prev => [
-          { 
-            id: Date.now(), 
-            title: 'در حال ساخت...', 
-            message: 'شخصیت شما در حال پردازش است. پس از اتمام، ربات به پیام خواهد داد.', 
-            time: 'هم‌اکنون', 
-            type: 'success' 
-          },
-          ...prev
-        ]);
-        setShowNotifications(true);
+        setAnimatingBox({ active: false, text: "" });
         setCreatePrompt("");
         setActiveTab("characters");
         setIsSubmitting(false);
-      }, 1200);
+      }, 1500);
       
     } catch (e) {
       console.error(e);
+      setAnimatingBox({ active: false, text: "" });
       alert("خطایی در ارتباط با سرور رخ داد.");
       setIsSubmitting(false);
     }
@@ -504,7 +498,7 @@ export default function Home() {
             </p>
           </header>
 
-          <form onSubmit={handleCreateCharacter} className={`space-y-5 transition-all duration-1000 ease-in-out ${isSubmitting ? 'scale-75 translate-y-32 opacity-0 drop-shadow-[0_0_30px_rgba(163,230,53,0.8)] filter blur-[2px]' : 'scale-100'}`}>
+          <form onSubmit={handleCreateCharacter} className={`space-y-5 transition-all duration-500 ease-in-out ${animatingBox.active ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
             <div>
               <label className="block text-sm text-zinc-300 mb-2">توضیحات (Prompt)</label>
               <textarea 
@@ -687,6 +681,18 @@ export default function Home() {
 
       {/* Overlays */}
       {renderNotifications()}
+
+      {/* Liquid Flying Box Animation */}
+      {animatingBox.active && (
+        <div className="fixed inset-0 z-[200] pointer-events-none flex flex-col items-center justify-center">
+          <div className="w-full max-w-sm px-4">
+             <div className="w-full bg-cosmic-surface border-2 border-brand-lime rounded-xl p-4 shadow-[0_0_50px_rgba(163,230,53,0.6)] animate-liquid-drop flex flex-col items-center justify-center text-center">
+                <div className="text-brand-lime font-dana font-bold mb-2">در حال ساخت شبکه عصبی...</div>
+                <div className="text-white text-xs opacity-70 truncate w-full">{animatingBox.text}</div>
+             </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       {selectedChar === null && !isNavigating && (
