@@ -156,7 +156,7 @@ export default function Home() {
     if (isNavigating) {
       return (
         <div className="p-4 min-h-[80vh] flex flex-col items-center justify-center animate-in fade-in duration-300">
-          <div className="w-32 h-32 rounded-full shimmer mb-6 border border-cosmic-border"></div>
+          <div className="w-28 h-28 rounded-full shimmer mb-6 border border-cosmic-border"></div>
           <div className="h-6 w-48 shimmer rounded-md mb-3"></div>
           <div className="h-4 w-32 shimmer rounded-md mb-8"></div>
           <div className="flex gap-2 mb-8">
@@ -165,7 +165,7 @@ export default function Home() {
           </div>
           <div className="h-14 w-full max-w-[280px] shimmer rounded-xl"></div>
           <p className="mt-8 text-xs font-mono text-zinc-500 tracking-widest uppercase">
-            Inference Cycle Loading...
+            در حال همگام‌سازی شبکه عصبی...
           </p>
         </div>
       );
@@ -208,7 +208,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-4 flex-none bg-cosmic-bg border-t border-cosmic-border/50 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="px-6 pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] flex-none bg-cosmic-bg border-t border-cosmic-border/50">
             <button 
               onClick={handleStartChat}
               className="w-full bg-brand-lime text-black font-dana font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
@@ -643,8 +643,8 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       {selectedChar === null && !isNavigating && (
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50">
-          <div className="flex justify-around items-center h-16 px-6">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex justify-around items-center h-[4.5rem] px-6 mb-1">
             <button 
               onClick={() => setActiveTab("characters")}
               className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "characters" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
