@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-vazirmatn: var(--font-vazirmatn), sans-serif;
+  --font-yekan: var(--font-yekan), sans-serif;
+  --font-peyda: var(--font-peyda), sans-serif;
   --color-brand-lime: #a3e635;
   --color-brand-blue: #2563eb;
   --color-cosmic-dark: #121214;

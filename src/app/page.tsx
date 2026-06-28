@@ -100,7 +100,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMenu(false)} />
         <div className="relative w-64 bg-cosmic-dark border-l border-cosmic-border h-full p-6 animate-in slide-in-from-right duration-300 ml-auto flex flex-col">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-bold font-mono">فهرست</h2>
+            <h2 className="text-xl font-peyda font-bold font-mono">فهرست</h2>
             <button onClick={() => setShowMenu(false)} className="text-zinc-400 hover:text-white">
               <X className="w-6 h-6" />
             </button>
@@ -125,7 +125,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
         <div className="relative w-full max-w-md mx-auto bg-cosmic-dark border-t border-cosmic-border h-[60vh] mt-auto rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300 flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">اعلان‌ها</h2>
+            <h2 className="text-xl font-peyda font-bold">اعلان‌ها</h2>
             <button onClick={() => setShowNotifications(false)} className="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-1">
               <X className="w-5 h-5" />
             </button>
@@ -134,7 +134,7 @@ export default function Home() {
             <div className="p-4 rounded-xl border border-cosmic-border bg-cosmic-surface">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-2 h-2 rounded-full bg-brand-lime"></span>
-                <span className="text-xs font-bold text-brand-lime">سیستم</span>
+                <span className="text-xs font-peyda font-bold text-brand-lime">سیستم</span>
               </div>
               <p className="text-sm">به شبکه آنیما خوش آمدید! پروفایل شما ساخته شد.</p>
               <p className="text-xs text-zinc-500 mt-2">۲ ساعت پیش</p>
@@ -193,7 +193,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <h2 className="text-2xl font-bold mb-2">{char.name}</h2>
+            <h2 className="text-2xl font-peyda font-bold mb-2">{char.name}</h2>
             <p className="text-zinc-400 mb-6 px-4">{char.description || char.tagline}</p>
             
             <div className="flex gap-2 justify-center mb-8 flex-wrap">
@@ -206,7 +206,7 @@ export default function Home() {
 
             <button 
               onClick={handleStartChat}
-              className="w-full bg-brand-lime text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
+              className="w-full bg-brand-lime text-black font-peyda font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bbf771] transition-colors active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]"
             >
               <Play className="w-5 h-5 fill-black" />
               شروع چت
@@ -244,7 +244,7 @@ export default function Home() {
           <div className="space-y-8 mt-2 px-4">
             {/* For You Section (Uses Algorithm from DB) */}
             <section>
-              <h2 className="text-lg font-bold mb-3">برای شما</h2>
+              <h2 className="text-lg font-peyda font-bold mb-3">برای شما</h2>
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
                 {forYouCharacters === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
@@ -270,11 +270,11 @@ export default function Home() {
                         {char.imageUrl ? (
                           <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-peyda font-bold bg-zinc-800">{char.name.charAt(0)}</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base truncate">{char.name}</h3>
+                        <h3 className="font-peyda font-semibold text-base truncate">{char.name}</h3>
                         <p className="text-brand-lime/80 text-xs mt-0.5 truncate">توسط @admin</p>
                         <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2">
                           {char.description || "بدون توضیحات"}
@@ -297,11 +297,11 @@ export default function Home() {
               <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">P</span>
+                    <span className="text-white font-peyda font-bold text-xs">P</span>
                   </div>
-                  <span className="text-white font-semibold text-sm">چت‌های بدون محدودیت</span>
+                  <span className="text-white font-peyda font-semibold text-sm">چت‌های بدون محدودیت</span>
                 </div>
-                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-bold">
+                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-peyda font-bold">
                   تهیه اشتراک
                 </button>
               </div>
@@ -309,7 +309,7 @@ export default function Home() {
 
             {/* Scenes (Vertical portrait cards) */}
             <section>
-              <h2 className="text-lg font-bold mb-3">صحنه‌ها</h2>
+              <h2 className="text-lg font-peyda font-bold mb-3">صحنه‌ها</h2>
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
                 {charactersResult === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
@@ -329,7 +329,7 @@ export default function Home() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                       <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <h3 className="font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
+                        <h3 className="font-peyda font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
                         <p className="text-[10px] text-zinc-300 mt-1 truncate">@admin</p>
                       </div>
                     </div>
@@ -340,7 +340,7 @@ export default function Home() {
 
             {/* Popular / Trending Section */}
             <section>
-              <h2 className="text-lg font-bold mb-3">محبوب‌ترین‌ها</h2>
+              <h2 className="text-lg font-peyda font-bold mb-3">محبوب‌ترین‌ها</h2>
               <div className="grid grid-cols-1 gap-3">
                 {charactersResult === undefined ? (
                    <div className="h-20 rounded-2xl shimmer border border-cosmic-border" />
@@ -355,11 +355,11 @@ export default function Home() {
                         {char.imageUrl ? (
                           <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-peyda font-bold bg-zinc-800">{char.name.charAt(0)}</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <h3 className="font-semibold text-sm truncate">{char.name}</h3>
+                        <h3 className="font-peyda font-semibold text-sm truncate">{char.name}</h3>
                         <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
                           {char.description || char.tagline || "یک شخصیت جالب"}
                         </p>
@@ -384,13 +384,13 @@ export default function Home() {
       return (
         <div className="p-4 pb-24">
           <header className="mb-8 mt-2">
-            <h1 className="text-2xl font-bold tracking-tight">ساخت شخصیت جدید</h1>
+            <h1 className="text-2xl font-peyda font-bold tracking-tight">ساخت شخصیت جدید</h1>
             <p className="text-zinc-400 text-sm mt-1">شخصیت رویایی خودتان را با ویژگی‌های دلخواه بسازید.</p>
           </header>
           
           <form onSubmit={handleCreateCharacter} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-300">نام شخصیت</label>
+              <label className="text-sm font-peyda font-semibold text-zinc-300">نام شخصیت</label>
               <input 
                 required
                 value={createName}
@@ -401,7 +401,7 @@ export default function Home() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-300">توضیح کوتاه</label>
+              <label className="text-sm font-peyda font-semibold text-zinc-300">توضیح کوتاه</label>
               <textarea 
                 required
                 value={createDesc}
@@ -412,7 +412,7 @@ export default function Home() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-300 flex items-center justify-between">
+              <label className="text-sm font-peyda font-semibold text-zinc-300 flex items-center justify-between">
                 <span>آدرس تصویر (لینک)</span>
                 <span className="text-[10px] text-zinc-500">اختیاری</span>
               </label>
@@ -428,7 +428,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-300">دسته‌بندی</label>
+              <label className="text-sm font-peyda font-semibold text-zinc-300">دسته‌بندی</label>
               <select 
                 required
                 value={createCategory}
@@ -444,7 +444,7 @@ export default function Home() {
             
             <button 
               type="submit"
-              className="w-full bg-brand-lime text-black font-bold py-4 rounded-xl mt-4 hover:bg-[#bbf771] transition-colors active:scale-95"
+              className="w-full bg-brand-lime text-black font-peyda font-bold py-4 rounded-xl mt-4 hover:bg-[#bbf771] transition-colors active:scale-95"
             >
               ساخت شخصیت
             </button>
@@ -457,7 +457,7 @@ export default function Home() {
       return (
         <div className="p-4">
           <header className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight">حساب کاربری</h1>
+            <h1 className="text-2xl font-peyda font-bold tracking-tight">حساب کاربری</h1>
           </header>
 
           <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-6 text-center mb-6 relative overflow-hidden">
