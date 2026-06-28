@@ -74,6 +74,9 @@ export default function Home() {
       try {
         // Most reliable way: Deep linking
         WebApp.openTelegramLink(`https://t.me/${botUsername}?start=chat_${selectedChar._id}`);
+        setTimeout(() => {
+          try { WebApp.close(); } catch(err) {}
+        }, 50);
       } catch (e) {
         // Fallback
         if (WebApp.initData) {
