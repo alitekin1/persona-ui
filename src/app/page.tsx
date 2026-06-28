@@ -65,13 +65,20 @@ export default function Home() {
     if (typeof window !== "undefined") {
       const module = await import("@twa-dev/sdk");
       const WebApp = module.default;
-      if (WebApp.initData) {
-        WebApp.sendData(JSON.stringify({ action: "start_chat", characterId: selectedChar._id }));
-        WebApp.close();
-        return;
+      
+      const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || "assistantproaibot";
+      
+      try {
+        // Most reliable way: Deep linking
+        WebApp.openTelegramLink(`https://t.me/${botUsername}?start=chat_${selectedChar._id}`);
+      } catch (e) {
+        // Fallback
+        if (WebApp.initData) {
+          WebApp.sendData(JSON.stringify({ action: "start_chat", characterId: selectedChar._id }));
+          WebApp.close();
+        }
       }
     }
-    alert("در تلگرام: بات مطلع شده و مینی‌اپ بسته می‌شود تا چت شروع شود.");
   };
 
   const handleCreateCharacter = async (e: React.FormEvent) => {
