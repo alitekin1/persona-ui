@@ -21,10 +21,14 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animatingBox, setAnimatingBox] = useState<{ active: boolean, text: string }>({ active: false, text: "" });
   const [showHistory, setShowHistory] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   // Local state for Telegram user data
   const [telegramId, setTelegramId] = useState<string>("unknown");
+  
+  // Profile edit states
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editUsername, setEditUsername] = useState("");
+  const updateUserProfile = useMutation("users:updateUserProfile" as any);
   
   // Convex queries
   const charactersResult = useQuery("characters:listCharacters" as any, {});
@@ -44,7 +48,8 @@ export default function Home() {
   const [editDesc, setEditDesc] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
   
-  const history = useQuery("conversations:listUserConversations" as any, user ? { userId: user._id, pageSize: 20 } : "skip");
+  const historyResult = useQuery("conversations:listUserConversations" as any, user ? { userId: user._id, pageSize: 20 } : "skip");
+  const history = historyResult?.conversations;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -270,169 +275,6 @@ export default function Home() {
       );
     }
 
-    if (activeTab === "characters") {
-      const scenes = characters.slice(0, 6);
-      const trending = characters.slice(0, 10);
-
-      return (
-        <div className="pb-6">
-          {/* Top Bar */}
-          <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <div className="flex-1 relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input 
-                type="text" 
-                placeholder="جستجو در شبکه..." 
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-              />
-            </div>
-            <button onClick={() => setShowNotifications(true)} className="p-2 -ml-2 text-zinc-400 hover:text-white relative">
-              <Bell className="w-6 h-6" />
-              {liveNotifications.length > 0 && (
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-lime rounded-full border-2 border-background animate-pulse"></span>
-              )}
-            </button>
-          </header>
-
-          <div className="space-y-8 mt-2 px-4">
-            {/* For You Section (Uses Algorithm from DB) */}
-            <section>
-              <h2 className="text-lg font-dana font-bold mb-3">برای شما</h2>
-              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
-                {forYouCharacters === undefined ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 shimmer">
-                      <div className="w-20 h-20 rounded-xl bg-zinc-800/50 shrink-0" />
-                      <div className="flex-1 space-y-3 py-1">
-                        <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
-                        <div className="h-3 bg-zinc-800/50 rounded w-full" />
-                        <div className="h-3 bg-zinc-800/50 rounded w-4/5" />
-                      </div>
-                    </div>
-                  ))
-                ) : forYouCharacters.length === 0 ? (
-                  <p className="text-zinc-500 text-sm">شخصیتی یافت نشد.</p>
-                ) : (
-                  forYouCharacters.map((char: any) => (
-                    <div 
-                      key={char._id} 
-                      onClick={() => handleCharClick(char)}
-                      className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
-                    >
-                      <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
-                        {char.imageUrl ? (
-                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-dana font-semibold text-base truncate">{char.name}</h3>
-                        <p className="text-brand-lime/80 text-xs mt-0.5 truncate">توسط @admin</p>
-                        <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2">
-                          {char.description || "بدون توضیحات"}
-                        </p>
-                        {char.popularity !== undefined && (
-                          <div className="flex items-center gap-1 mt-2 text-zinc-500 text-xs">
-                            <MessageCircle className="w-3 h-3" />
-                            <span>{char.popularity}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-
-            {/* Banner Ad / Premium CTA */}
-            <section>
-              <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-white font-dana font-bold text-xs">P</span>
-                  </div>
-                  <span className="text-white font-dana font-semibold text-sm">چت‌های بدون محدودیت</span>
-                </div>
-                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-dana font-bold">
-                  تهیه اشتراک
-                </button>
-              </div>
-            </section>
-
-            {/* Scenes (Vertical portrait cards) */}
-            <section>
-              <h2 className="text-lg font-dana font-bold mb-3">صحنه‌ها</h2>
-              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
-                {charactersResult === undefined ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="snap-start shrink-0 w-[140px] h-[200px] rounded-2xl shimmer border border-cosmic-border" />
-                  ))
-                ) : (
-                  scenes.map((char: any) => (
-                    <div 
-                      key={char._id}
-                      onClick={() => handleCharClick(char)}
-                      className="relative snap-start shrink-0 w-[140px] h-[200px] rounded-2xl overflow-hidden cursor-pointer group border border-cosmic-border/50"
-                    >
-                      {char.imageUrl ? (
-                        <img src={char.imageUrl} alt={char.name} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <h3 className="font-dana font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
-                        <p className="text-[10px] text-zinc-300 mt-1 truncate">@admin</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-
-            {/* Popular / Trending Section */}
-            <section>
-              <h2 className="text-lg font-dana font-bold mb-3">محبوب‌ترین‌ها</h2>
-              <div className="grid grid-cols-1 gap-3">
-                {charactersResult === undefined ? (
-                   <div className="h-20 rounded-2xl shimmer border border-cosmic-border" />
-                ) : (
-                  trending.map((char: any) => (
-                    <div 
-                      key={char._id} 
-                      onClick={() => handleCharClick(char)}
-                      className="bg-cosmic-surface border border-cosmic-border/50 rounded-2xl p-3 flex gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
-                    >
-                      <div className="w-16 h-16 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
-                        {char.imageUrl ? (
-                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <h3 className="font-dana font-semibold text-sm truncate">{char.name}</h3>
-                        <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
-                          {char.description || char.tagline || "یک شخصیت جالب"}
-                        </p>
-                        {char.popularity !== undefined && (
-                          <div className="flex items-center gap-1 mt-2 text-zinc-500 text-[10px]">
-                            <MessageCircle className="w-3 h-3" />
-                            <span>{char.popularity}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-          </div>
-        </div>
-      );
-    }
-
     if (editingChar !== null) {
       return (
         <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
@@ -483,6 +325,171 @@ export default function Home() {
                 ذخیره تغییرات
               </button>
             </form>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === "characters") {
+      const scenes = characters.slice(0, 6);
+      const trending = characters.slice(0, 10);
+
+      return (
+        <div className="pb-6">
+          {/* Top Bar */}
+          <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+            <div className="flex-1 relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <input 
+                type="text" 
+                placeholder="جستجو در شبکه..." 
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
+            <button onClick={() => setShowNotifications(true)} className="p-2 -ml-2 text-zinc-400 hover:text-white relative">
+              <Bell className="w-6 h-6" />
+              {liveNotifications.length > 0 && (
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-lime rounded-full border-2 border-background animate-pulse"></span>
+              )}
+            </button>
+          </header>
+
+          <div className="space-y-8 mt-2 px-4">
+            {/* For You Section (Uses Algorithm from DB) */}
+            <section>
+              <h2 className="text-lg font-dana font-bold mb-1">برای شما</h2>
+              <p className="text-xs text-zinc-400 mb-3 leading-relaxed">شخصیت‌ها دستیارهای مستقلی هستند که می‌توانید با آن‌ها گفتگو کنید.</p>
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
+                {forYouCharacters === undefined ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 shimmer">
+                      <div className="w-20 h-20 rounded-xl bg-zinc-800/50 shrink-0" />
+                      <div className="flex-1 space-y-3 py-1">
+                        <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
+                        <div className="h-3 bg-zinc-800/50 rounded w-full" />
+                        <div className="h-3 bg-zinc-800/50 rounded w-4/5" />
+                      </div>
+                    </div>
+                  ))
+                ) : forYouCharacters.length === 0 ? (
+                  <p className="text-zinc-500 text-sm">شخصیتی یافت نشد.</p>
+                ) : (
+                  forYouCharacters.map((char: any) => (
+                    <div 
+                      key={char._id} 
+                      onClick={() => handleCharClick(char)}
+                      className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                    >
+                      <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                        {char.imageUrl ? (
+                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-dana font-semibold text-base truncate">{char.name}</h3>
+                        {char.creatorName || char.creatorId ? <p className="text-brand-lime/80 text-xs mt-0.5 truncate">توسط @{char.creatorName || char.creatorId}</p> : null}
+                        <p className="text-zinc-400 text-xs mt-1.5 line-clamp-2">
+                          {char.description || "بدون توضیحات"}
+                        </p>
+                        {char.popularity !== undefined && (
+                          <div className="flex items-center gap-1 mt-2 text-zinc-500 text-xs">
+                            <MessageCircle className="w-3 h-3" />
+                            <span>{char.popularity}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* Banner Ad / Premium CTA */}
+            <section>
+              <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <span className="text-white font-dana font-bold text-xs">P</span>
+                  </div>
+                  <span className="text-white font-dana font-semibold text-sm">چت‌های بدون محدودیت</span>
+                </div>
+                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-dana font-bold">
+                  تهیه اشتراک
+                </button>
+              </div>
+            </section>
+
+            {/* Scenes (Vertical portrait cards) */}
+            <section>
+              <h2 className="text-lg font-dana font-bold mb-1">صحنه‌ها</h2>
+              <p className="text-xs text-zinc-400 mb-3 leading-relaxed">صحنه‌ها فضاهای پیش‌فرضی برای شروع یک مکالمه خاص (مثل مصاحبه یا تمرین زبان) هستند.</p>
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
+                {charactersResult === undefined ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="snap-start shrink-0 w-[140px] h-[200px] rounded-2xl shimmer border border-cosmic-border" />
+                  ))
+                ) : (
+                  scenes.map((char: any) => (
+                    <div 
+                      key={char._id}
+                      onClick={() => handleCharClick(char)}
+                      className="relative snap-start shrink-0 w-[140px] h-[200px] rounded-2xl overflow-hidden cursor-pointer group border border-cosmic-border/50"
+                    >
+                      {char.imageUrl ? (
+                        <img src={char.imageUrl} alt={char.name} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                      <div className="absolute bottom-3 left-3 right-3 text-white">
+                        <h3 className="font-dana font-semibold text-sm leading-tight line-clamp-2">{char.name}</h3>
+                        {char.creatorName || char.creatorId ? <p className="text-[10px] text-zinc-300 mt-1 truncate">@{char.creatorName || char.creatorId}</p> : null}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            {/* Popular / Trending Section */}
+            <section>
+              <h2 className="text-lg font-dana font-bold mb-3">محبوب‌ترین‌ها</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {charactersResult === undefined ? (
+                   <div className="h-20 rounded-2xl shimmer border border-cosmic-border" />
+                ) : (
+                  trending.map((char: any) => (
+                    <div 
+                      key={char._id} 
+                      onClick={() => handleCharClick(char)}
+                      className="bg-cosmic-surface border border-cosmic-border/50 rounded-2xl p-3 flex gap-4 cursor-pointer hover:bg-zinc-800 transition-colors"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                        {char.imageUrl ? (
+                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl text-zinc-500 font-dana font-bold bg-zinc-800">{char.name.charAt(0)}</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                        <h3 className="font-dana font-semibold text-sm truncate">{char.name}</h3>
+                        <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
+                          {char.description || char.tagline || "یک شخصیت جالب"}
+                        </p>
+                        {char.popularity !== undefined && (
+                          <div className="flex items-center gap-1 mt-2 text-zinc-500 text-[10px]">
+                            <MessageCircle className="w-3 h-3" />
+                            <span>{char.popularity}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
           </div>
         </div>
       );
@@ -555,11 +562,11 @@ export default function Home() {
                 <div className="space-y-3">
                   {[1,2,3].map(i => <div key={i} className="h-16 bg-zinc-800 rounded-xl shimmer" />)}
                 </div>
-              ) : history.length === 0 ? (
+              ) : history?.length === 0 ? (
                 <p className="text-zinc-500 text-center py-10">تاریخچه‌ای یافت نشد.</p>
               ) : (
                 <div className="space-y-3">
-                  {history.map((conv: any) => {
+                  {(history || []).map((conv: any) => {
                      const char = characters.find((c: any) => c._id === conv.characterId);
                      return (
                        <div key={conv._id} className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex items-center justify-between">
@@ -570,6 +577,7 @@ export default function Home() {
                            <div>
                              <h3 className="font-dana font-medium">{char?.name || 'شخصیت ناشناس'}</h3>
                              <p className="text-xs text-zinc-500">{new Date(conv.updatedAt || conv.createdAt).toLocaleDateString('fa-IR')}</p>
+                             {conv.lastMessagePreview && <p className="text-sm text-zinc-400 mt-1 line-clamp-1">{conv.lastMessagePreview}</p>}
                            </div>
                          </div>
                        </div>
@@ -577,40 +585,6 @@ export default function Home() {
                   })}
                 </div>
               )}
-            </div>
-          </div>
-        );
-      }
-
-      if (showSettings) {
-        return (
-          <div className="flex flex-col h-screen bg-cosmic-bg animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="p-4 flex-none border-b border-cosmic-border/30">
-              <button 
-                onClick={() => setShowSettings(false)}
-                className="flex items-center text-zinc-400 hover:text-white transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6 ml-1" />
-                <span className="font-dana font-medium text-lg">بازگشت</span>
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <h2 className="text-xl font-dana font-bold mb-6">تنظیمات مود</h2>
-              <div className="space-y-4">
-                <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center">
-                  <span>مود تاریک (Dark Mode)</span>
-                  <div className="w-12 h-6 bg-brand-lime rounded-full relative">
-                    <div className="w-4 h-4 bg-black rounded-full absolute left-1 top-1"></div>
-                  </div>
-                </div>
-                <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex flex-col gap-2">
-                  <span>تم اپلیکیشن</span>
-                  <select className="bg-zinc-800 text-white p-2 rounded-lg border border-zinc-700 outline-none">
-                    <option>کیهانی (Cosmic)</option>
-                    <option>ساده (Minimal)</option>
-                  </select>
-                </div>
-              </div>
             </div>
           </div>
         );
@@ -624,13 +598,44 @@ export default function Home() {
 
           <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-6 text-center mb-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-brand-lime"></div>
-            <p className="text-sm text-zinc-400 mb-2">شناسه تلگرام شما</p>
-            {user === undefined && telegramId !== "unknown" ? (
-              <div className="h-8 bg-zinc-800 rounded w-1/2 mx-auto shimmer" />
+                        {isEditingProfile ? (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (editUsername && user) {
+                  await updateUserProfile({ telegramId, username: editUsername });
+                  setIsEditingProfile(false);
+                }
+              }} className="flex flex-col gap-2 mt-2">
+                <input 
+                  type="text" 
+                  value={editUsername} 
+                  onChange={(e) => setEditUsername(e.target.value)} 
+                  placeholder="نام کاربری جدید"
+                  className="bg-zinc-800 text-center text-white border border-brand-lime/50 rounded-lg py-2 focus:outline-none focus:border-brand-lime"
+                />
+                <div className="flex gap-2">
+                  <button type="submit" className="flex-1 bg-brand-lime text-black rounded-lg py-1.5 font-bold text-sm">ذخیره</button>
+                  <button type="button" onClick={() => setIsEditingProfile(false)} className="flex-1 bg-zinc-700 text-white rounded-lg py-1.5 font-bold text-sm">لغو</button>
+                </div>
+              </form>
             ) : (
-              <div className="text-2xl font-bold font-mono text-brand-lime truncate">
-                {user?.username ? `@${user.username}` : telegramId}
-              </div>
+              <>
+                <p className="text-sm text-zinc-400 mb-2">شناسه شما</p>
+                {user === undefined && telegramId !== "unknown" ? (
+                  <div className="h-8 bg-zinc-800 rounded w-1/2 mx-auto shimmer" />
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="text-2xl font-bold font-mono text-brand-lime truncate">
+                      {user?.username ? `@${user.username}` : telegramId}
+                    </div>
+                    {user && (
+                      <button onClick={() => { setEditUsername(user.username || ""); setIsEditingProfile(true); }} className="text-zinc-500 hover:text-white p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
             {user?.onboarded ? (
                <span className="inline-block mt-3 px-3 py-1 bg-brand-lime/10 border border-brand-lime/30 rounded-full text-xs text-brand-lime">
@@ -663,10 +668,7 @@ export default function Home() {
               <span className="text-sm">تاریخچه چت‌ها</span>
               <ChevronLeft className="w-4 h-4 text-zinc-500" />
             </button>
-            <button onClick={() => setShowSettings(true)} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
-              <span className="text-sm">تنظیمات مود</span>
-              <ChevronLeft className="w-4 h-4 text-zinc-500" />
-            </button>
+            
           </div>
         </div>
       );
