@@ -35,7 +35,7 @@ export default function Home() {
   const user = useQuery("users:getUserByTelegramId" as any, telegramId !== "unknown" ? { telegramId } : "skip");
   
   const createPendingCharacter = useMutation("characters:createPending" as any);
-  const triggerGeneration = useAction("actions.agent:triggerGeneration" as any);
+  const triggerGeneration = useAction("actions/agent:triggerGeneration" as any);
   const updateCharacter = useMutation("characters:updateCharacter" as any);
   
   const [editingChar, setEditingChar] = useState<any | null>(null);
@@ -72,6 +72,7 @@ export default function Home() {
       const characterId = await createPendingCharacter({
         prompt: createPrompt,
         creatorId: telegramId !== "unknown" ? telegramId : "guest",
+        creatorName: user?.username || "ناشناس",
         isPublic: isPublic
       });
       
@@ -82,23 +83,27 @@ export default function Home() {
         isPublic: isPublic
       });
       
-      setLiveNotifications(prev => [
-        { 
-          id: Date.now(), 
-          title: 'در حال ساخت...', 
-          message: 'شخصیت شما در حال پردازش است. پس از اتمام، ربات به شما پیام خواهد داد. می‌توانید مینی‌اپ را ببندید.', 
-          time: 'هم‌اکنون', 
-          type: 'success' 
-        },
-        ...prev
-      ]);
-      setShowNotifications(true);
-      setCreatePrompt("");
-      setActiveTab("characters");
+      // Animation delay
+      setTimeout(() => {
+        setLiveNotifications(prev => [
+          { 
+            id: Date.now(), 
+            title: 'در حال ساخت...', 
+            message: 'شخصیت شما در حال پردازش است. پس از اتمام، ربات به پیام خواهد داد.', 
+            time: 'هم‌اکنون', 
+            type: 'success' 
+          },
+          ...prev
+        ]);
+        setShowNotifications(true);
+        setCreatePrompt("");
+        setActiveTab("characters");
+        setIsSubmitting(false);
+      }, 1200);
+      
     } catch (e) {
       console.error(e);
-      alert("خطایی در ارتباط با سرور ساخت کاراکتر رخ داد.");
-    } finally {
+      alert("خطایی در ارتباط با سرور رخ داد.");
       setIsSubmitting(false);
     }
   };
@@ -229,7 +234,8 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <h2 className="text-xl font-dana font-bold mb-3">{char.name}</h2>
+            <h2 className="text-xl font-dana font-bold mb-1">{char.name}</h2>
+            {char.isPublic && char.creatorName && <p className="text-xs text-brand-lime mb-3 opacity-80">ساخته شده توسط @{char.creatorName}</p>}
             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{char.description || char.tagline}</p>
             
             <div className="flex gap-2 justify-center mb-4 flex-wrap">
@@ -498,7 +504,7 @@ export default function Home() {
             </p>
           </header>
 
-          <form onSubmit={handleCreateCharacter} className="space-y-5">
+          <form onSubmit={handleCreateCharacter} className={`space-y-5 transition-all duration-1000 ease-in-out ${isSubmitting ? 'scale-75 translate-y-32 opacity-0 drop-shadow-[0_0_30px_rgba(163,230,53,0.8)] filter blur-[2px]' : 'scale-100'}`}>
             <div>
               <label className="block text-sm text-zinc-300 mb-2">توضیحات (Prompt)</label>
               <textarea 
