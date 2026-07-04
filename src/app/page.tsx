@@ -73,15 +73,24 @@ export default function Home() {
     try {
       setUploadingImage(true);
       
-      const postUrl = await generateUploadUrl();
+      const postUrl = await generateUploadUrl({});
       
+      if (!postUrl) throw new Error("No upload URL returned");
+
       const result = await fetch(postUrl, {
         method: "POST",
         headers: { "Content-Type": file.type },
         body: file,
       });
+
+      if (!result.ok) {
+        throw new Error(`Upload failed: ${result.statusText}`);
+      }
+
       const { storageId } = await result.json();
       
+      if (!storageId) throw new Error("No storageId returned");
+
       const url = await getUploadUrl({ storageId });
       if (url) {
         setEditImageUrl(url);
