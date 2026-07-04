@@ -41,12 +41,15 @@ export default function Home() {
   const createPendingCharacter = useMutation("characters:createPending" as any);
   const triggerGeneration = useAction("actions/agent:triggerGeneration" as any);
   const updateCharacter = useMutation("characters:updateCharacter" as any);
+  const generateUploadUrl = useMutation("characters:generateUploadUrl" as any);
+  const getUploadUrl = useMutation("characters:getUploadUrl" as any);
   
   const [editingChar, setEditingChar] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const triggerHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' = 'light') => {
     if (typeof window !== "undefined") {
@@ -60,6 +63,34 @@ export default function Home() {
           }
         }
       }).catch(() => {});
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      
+      const postUrl = await generateUploadUrl();
+      
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await result.json();
+      
+      const url = await getUploadUrl({ storageId });
+      if (url) {
+        setEditImageUrl(url);
+      }
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert("آپلود تصویر با خطا مواجه شد.");
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -317,6 +348,33 @@ export default function Home() {
           <div className="flex-1 overflow-y-auto p-6">
             <h2 className="text-xl font-dana font-bold mb-6">ویرایش شخصیت</h2>
             <form onSubmit={handleUpdateCharacter} className="space-y-4">
+              
+              {/* Image Upload Section at Top */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative w-24 h-24 mb-3">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-brand-lime/30 bg-zinc-800 flex items-center justify-center">
+                    {editImageUrl ? (
+                      <img src={editImageUrl} alt="Character" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-zinc-500 text-3xl">?</div>
+                    )}
+                  </div>
+                  {uploadingImage && (
+                    <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-brand-lime border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+                <span className="text-xs text-zinc-400">برای تغییر تصویر کلیک کنید</span>
+              </div>
+
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">نام شخصیت</label>
                 <input 
@@ -333,16 +391,6 @@ export default function Home() {
                   onChange={(e) => setEditDesc(e.target.value)}
                   className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-2">آدرس تصویر (URL)</label>
-                <input 
-                  type="text"
-                  value={editImageUrl}
-                  onChange={(e) => setEditImageUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base transition-colors"
                 />
               </div>
               <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl p-4">
