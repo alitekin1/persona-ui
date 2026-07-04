@@ -47,6 +47,21 @@ export default function Home() {
   const [editDesc, setEditDesc] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
   
+  const triggerHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' = 'light') => {
+    if (typeof window !== "undefined") {
+      import("@twa-dev/sdk").then((module) => {
+        const WebApp = module.default;
+        if (WebApp.HapticFeedback) {
+          if (['success', 'warning', 'error'].includes(type)) {
+            WebApp.HapticFeedback.notificationOccurred(type as any);
+          } else {
+            WebApp.HapticFeedback.impactOccurred(type as any);
+          }
+        }
+      }).catch(() => {});
+    }
+  };
+
   const historyResult = useQuery("conversations:listUserConversations" as any, user ? { userId: user._id, pageSize: 20 } : "skip");
   const history = historyResult?.conversations;
 
@@ -57,6 +72,10 @@ export default function Home() {
         if (WebApp.initData) {
           WebApp.ready();
           WebApp.expand();
+          try {
+            WebApp.setHeaderColor('#09090b');
+            WebApp.setBackgroundColor('#09090b');
+          } catch(e) {}
           
           const user = WebApp.initDataUnsafe?.user;
           if (user?.id) {
@@ -72,6 +91,7 @@ export default function Home() {
     e.preventDefault();
     if (!createPrompt || isSubmitting) return;
     
+    triggerHaptic('medium');
     setIsSubmitting(true);
     
     try {
@@ -99,10 +119,12 @@ export default function Home() {
         creatorId: telegramId !== "unknown" ? telegramId : "guest",
         isPublic: isPublic
       });
+      triggerHaptic('success');
       
     } catch (e) {
       console.error(e);
       alert("خطایی در ارتباط با سرور رخ داد.");
+      triggerHaptic('error');
       setIsSubmitting(false);
     }
   };
@@ -125,6 +147,7 @@ export default function Home() {
   };
 
   const handleCharClick = (char: any) => {
+    triggerHaptic('light');
     setIsNavigating(true);
     // Simulate the neural loading cycle (shimmer skeleton) before showing character detail
     setTimeout(() => {
@@ -134,6 +157,7 @@ export default function Home() {
   };
 
   const handleStartChat = async () => {
+    triggerHaptic('heavy');
     if (typeof window !== "undefined") {
       const module = await import("@twa-dev/sdk");
       const WebApp = module.default;
@@ -775,8 +799,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen relative max-w-md mx-auto border-x border-cosmic-border/30 bg-background">
-      <main className="pb-20">
+    <div className="min-h-[100dvh] relative max-w-md mx-auto border-x border-cosmic-border/30 bg-background pt-[env(safe-area-inset-top)]">
+      <main className="pb-24">
         {renderContent()}
       </main>
 
@@ -785,27 +809,27 @@ export default function Home() {
 
       {/* Bottom Navigation */}
       {selectedChar === null && !isNavigating && (
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50 pb-[env(safe-area-inset-bottom)]">
-          <div className="flex justify-around items-center h-[4.5rem] px-6 mb-1">
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50 pb-[env(safe-area-inset-bottom)] pt-1">
+          <div className="flex justify-around items-center h-16 px-6">
             <button 
-              onClick={() => setActiveTab("characters")}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "characters" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              onClick={() => { triggerHaptic('light'); setActiveTab("characters"); }}
+              className={`flex flex-col items-center gap-1 transition-all active:scale-90 ${activeTab === "characters" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
             >
-              <MessageSquare className={`w-6 h-6 ${activeTab === "characters" ? "fill-white" : ""}`} />
+              <MessageSquare className={`w-6 h-6 transition-all ${activeTab === "characters" ? "fill-white/20" : ""}`} />
             </button>
             
             <button 
-              onClick={() => setActiveTab("create")}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "create" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              onClick={() => { triggerHaptic('light'); setActiveTab("create"); }}
+              className={`flex flex-col items-center gap-1 transition-all active:scale-90 ${activeTab === "create" ? "text-brand-lime" : "text-zinc-500 hover:text-zinc-300"}`}
             >
-              <PlusCircle className={`w-6 h-6 ${activeTab === "create" ? "fill-white" : ""}`} />
+              <PlusCircle className={`w-7 h-7 transition-all ${activeTab === "create" ? "fill-brand-lime/20 shadow-[0_0_15px_rgba(163,230,53,0.3)] rounded-full" : ""}`} />
             </button>
             
             <button 
-              onClick={() => setActiveTab("profile")}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === "profile" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              onClick={() => { triggerHaptic('light'); setActiveTab("profile"); }}
+              className={`flex flex-col items-center gap-1 transition-all active:scale-90 ${activeTab === "profile" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
             >
-              <User className={`w-6 h-6 ${activeTab === "profile" ? "fill-white" : ""}`} />
+              <User className={`w-6 h-6 transition-all ${activeTab === "profile" ? "fill-white/20" : ""}`} />
             </button>
           </div>
         </nav>
