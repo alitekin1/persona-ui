@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, Menu, Bell, MessageCircle, X } from "lucide-react";
+import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, ChevronDown, Menu, Bell, MessageCircle, X } from "lucide-react";
 import { useQuery, useMutation, useAction } from "convex/react";
 
 export default function Home() {
@@ -19,7 +19,6 @@ export default function Home() {
   const [createPrompt, setCreatePrompt] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [animatingBox, setAnimatingBox] = useState<{ active: boolean, text: string }>({ active: false, text: "" });
   const [showHistory, setShowHistory] = useState(false);
 
   // Local state for Telegram user data
@@ -74,7 +73,6 @@ export default function Home() {
     if (!createPrompt || isSubmitting) return;
     
     setIsSubmitting(true);
-    setAnimatingBox({ active: true, text: createPrompt.substring(0, 50) + "..." });
     
     try {
       const characterId = await createPendingCharacter({
@@ -84,6 +82,17 @@ export default function Home() {
         isPublic: isPublic
       });
       
+      // Scroll to gallery
+      const gallery = document.getElementById('gallery-section');
+      if (gallery) {
+        gallery.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      // Clear form
+      setCreatePrompt("");
+      setIsSubmitting(false);
+      
+      // Trigger background generation
       await triggerGeneration({
         characterId,
         prompt: createPrompt,
@@ -91,17 +100,8 @@ export default function Home() {
         isPublic: isPublic
       });
       
-      // Give the animation time to play out
-      setTimeout(() => {
-        setAnimatingBox({ active: false, text: "" });
-        setCreatePrompt("");
-        setActiveTab("characters");
-        setIsSubmitting(false);
-      }, 1500);
-      
     } catch (e) {
       console.error(e);
-      setAnimatingBox({ active: false, text: "" });
       alert("خطایی در ارتباط با سرور رخ داد.");
       setIsSubmitting(false);
     }
@@ -497,48 +497,147 @@ export default function Home() {
 
     if (activeTab === "create") {
       return (
-        <div className="p-4 animate-in fade-in duration-300">
-          <header className="mb-6 mt-2">
-            <h1 className="text-xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
-            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-              توضیح دهید که چه شخصیتی با چه ویژگی‌هایی می‌خواهید. هوش مصنوعی آن را برای شما می‌سازد.
-            </p>
-          </header>
+        <div className="h-[calc(100dvh-4.5rem)] overflow-y-auto snap-y snap-mandatory no-scrollbar animate-in fade-in duration-300 -mx-4 px-4 pb-4">
+          {/* Section 1: Character Building Area */}
+          <div className="min-h-full snap-start flex flex-col justify-center pb-12 pt-4 relative">
+            <header className="mb-8 mt-2">
+              <h1 className="text-2xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
+              <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+                توضیح دهید که چه شخصیتی با چه ویژگی‌هایی می‌خواهید. هوش مصنوعی آن را برای شما می‌سازد.
+              </p>
+            </header>
 
-          <form onSubmit={handleCreateCharacter} className={`space-y-5 transition-all duration-500 ease-in-out ${animatingBox.active ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-            <div>
-              <label className="block text-sm text-zinc-300 mb-2">توضیحات (Prompt)</label>
-              <textarea 
-                value={createPrompt}
-                onChange={(e) => setCreatePrompt(e.target.value)}
-                placeholder="مثلاً: یک فیلسوف بدبین که با طنز تلخ به سوالات جواب می‌دهد و به سبک قرن ۱۹ حرف می‌زند..."
-                className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[150px] placeholder:text-zinc-600 resize-none leading-relaxed text-base"
-                required
-              />
-            </div>
-            
-            <div className="flex items-center justify-between bg-cosmic-surface border border-cosmic-border rounded-xl p-4">
+            <form onSubmit={handleCreateCharacter} className="space-y-6 transition-all duration-500 ease-in-out">
               <div>
-                <span className="block text-sm text-white">شخصیت عمومی باشد؟</span>
-                <span className="block text-xs text-zinc-500 mt-1">امکان استفاده توسط سایر کاربران</span>
+                <label className="block text-sm text-zinc-300 mb-2 font-medium">توضیحات (Prompt)</label>
+                <textarea 
+                  value={createPrompt}
+                  onChange={(e) => setCreatePrompt(e.target.value)}
+                  placeholder="مثلاً: یک فیلسوف بدبین که با طنز تلخ به سوالات جواب می‌دهد و به سبک قرن ۱۹ حرف می‌زند..."
+                  className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime focus:ring-1 focus:ring-brand-lime/50 min-h-[160px] placeholder:text-zinc-600 resize-none leading-relaxed text-base transition-all"
+                  required
+                />
               </div>
-              <button 
-                type="button"
-                onClick={() => setIsPublic(!isPublic)}
-                className={`w-12 h-6 rounded-full relative transition-colors ${isPublic ? 'bg-brand-lime' : 'bg-zinc-600'}`}
-              >
-                <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${isPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
-              </button>
-            </div>
+              
+              <div className="flex items-center justify-between bg-cosmic-surface border border-cosmic-border rounded-xl p-4 transition-all">
+                <div>
+                  <span className="block text-sm font-medium text-white">شخصیت عمومی باشد؟</span>
+                  <span className="block text-xs text-zinc-500 mt-1">امکان استفاده توسط سایر کاربران</span>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setIsPublic(!isPublic)}
+                  className={`w-12 h-6 rounded-full relative transition-colors ${isPublic ? 'bg-brand-lime' : 'bg-zinc-600'}`}
+                >
+                  <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${isPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
+                </button>
+              </div>
 
-            <button 
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full font-dana font-bold py-3.5 rounded-xl transition-colors ${isSubmitting ? 'bg-zinc-600 text-zinc-400' : 'bg-brand-lime text-black hover:bg-[#bbf771] active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.3)]'}`}
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full font-dana font-bold py-4 rounded-xl transition-all ${isSubmitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-brand-lime text-black hover:bg-[#bbf771] active:scale-95 shadow-[0_0_20px_rgba(163,230,53,0.2)] hover:shadow-[0_0_25px_rgba(163,230,53,0.4)]'}`}
+              >
+                {isSubmitting ? 'در حال ارسال درخواست...' : 'تولید شخصیت با هوش مصنوعی'}
+              </button>
+            </form>
+
+            <div 
+              onClick={() => document.getElementById('gallery-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="absolute bottom-6 left-0 right-0 flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-300 animate-pulse cursor-pointer"
             >
-              {isSubmitting ? 'در حال ارسال درخواست...' : 'تولید شخصیت با هوش مصنوعی'}
-            </button>
-          </form>
+              <span className="text-[10px] mb-1 font-mono uppercase tracking-widest">گالری من</span>
+              <ChevronDown className="w-5 h-5" />
+            </div>
+          </div>
+
+          {/* Section 2: History & Gallery */}
+          <div id="gallery-section" className="min-h-full snap-start pt-8 pb-20 flex flex-col">
+            <header className="mb-6 flex-none">
+              <h1 className="text-2xl font-dana font-bold tracking-tight text-brand-lime">گالری شخصیت‌ها</h1>
+              <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+                تاریخچه و شخصیت‌هایی که تاکنون توسط شما خلق شده‌اند.
+              </p>
+            </header>
+            
+            <div className="flex-1">
+               {myCharacters.length === 0 ? (
+                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-10 border border-dashed border-cosmic-border rounded-2xl bg-cosmic-surface/30">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                       <PlusCircle className="w-8 h-8 text-zinc-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-zinc-400">شما هنوز شخصیتی نساخته‌اید.</p>
+                      <p className="text-xs text-zinc-500 mt-1">به بالا برگردید و اولین شخصیت خود را بسازید.</p>
+                    </div>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-2 gap-4 pb-8">
+                   {myCharacters.map((char: any) => (
+                      <div 
+                        key={char._id}
+                        onClick={() => {
+                          if (char.status !== "generating" && char.status !== "failed") {
+                             handleCharClick(char);
+                          }
+                        }}
+                        className={`bg-cosmic-surface border border-cosmic-border rounded-2xl overflow-hidden group transition-all duration-300 ${char.status === 'generating' || char.status === 'failed' ? 'cursor-default opacity-90' : 'cursor-pointer hover:border-brand-lime/50 hover:shadow-[0_0_15px_rgba(163,230,53,0.1)] hover:-translate-y-1'}`}
+                      >
+                         <div className="w-full aspect-[4/5] bg-zinc-800 relative">
+                            {char.imageUrl && char.status !== "generating" ? (
+                              <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-5xl text-zinc-600 font-dana font-bold bg-zinc-900 group-hover:text-zinc-500 transition-colors">
+                                {char.status === "generating" ? (
+                                  <div className="flex flex-col items-center gap-3">
+                                    <div className="w-8 h-8 border-2 border-brand-lime border-t-transparent rounded-full animate-spin"></div>
+                                  </div>
+                                ) : char.status === "failed" ? (
+                                  <X className="w-8 h-8 text-red-500" />
+                                ) : (
+                                  char.name.charAt(0)
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Processing Overlay if Generating */}
+                            {char.status === "generating" && (
+                              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-3 text-center">
+                                 <div className="w-8 h-8 border-2 border-brand-lime border-t-transparent rounded-full animate-spin mb-3"></div>
+                                 <span className="text-xs text-brand-lime font-medium font-mono animate-pulse">
+                                   {char.generationStage ? (
+                                      char.generationStage === 'web_search' ? 'جستجو در وب...' :
+                                      char.generationStage === 'drafting' ? 'در حال نوشتن...' :
+                                      char.generationStage === 'refining' ? 'پردازش نهایی...' :
+                                      char.generationStage === 'persona_generation' ? 'طراحی شخصیت...' :
+                                      char.generationStage === 'image_generation' ? 'ساخت تصویر...' :
+                                      char.generationStage === 'finalizing' ? 'آماده‌سازی نهایی...' :
+                                      char.generationStage
+                                   ) : 'آماده‌سازی...'}
+                                 </span>
+                                 <div className="w-full h-1 bg-zinc-800 rounded-full mt-3 overflow-hidden">
+                                   <div className="h-full bg-brand-lime rounded-full w-1/2 animate-[pulse_2s_ease-in-out_infinite] origin-left"></div>
+                                 </div>
+                              </div>
+                            )}
+                            
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
+                            
+                            <div className="absolute bottom-3 left-3 right-3 text-center">
+                               <h3 className="font-dana font-bold text-sm text-white truncate drop-shadow-md">
+                                 {char.status === "generating" ? "در حال ساخت..." : char.name}
+                               </h3>
+                               {char.status !== "generating" && (
+                                 <p className="text-[10px] text-zinc-400 mt-1 truncate">{char.isPublic ? 'عمومی' : 'خصوصی'}</p>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          </div>
         </div>
       );
     }
@@ -683,18 +782,6 @@ export default function Home() {
 
       {/* Overlays */}
       {renderNotifications()}
-
-      {/* Liquid Flying Box Animation */}
-      {animatingBox.active && (
-        <div className="fixed inset-0 z-[200] pointer-events-none flex flex-col items-center justify-center">
-          <div className="w-full max-w-sm px-4">
-             <div className="w-full bg-cosmic-surface border-2 border-brand-lime rounded-xl p-4 shadow-[0_0_50px_rgba(163,230,53,0.6)] animate-liquid-drop flex flex-col items-center justify-center text-center">
-                <div className="text-brand-lime font-dana font-bold mb-2">در حال ساخت شبکه عصبی...</div>
-                <div className="text-white text-xs opacity-70 truncate w-full">{animatingBox.text}</div>
-             </div>
-          </div>
-        </div>
-      )}
 
       {/* Bottom Navigation */}
       {selectedChar === null && !isNavigating && (
