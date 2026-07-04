@@ -45,6 +45,7 @@ export default function Home() {
   const [editingChar, setEditingChar] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
   
   const triggerHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' = 'light') => {
@@ -137,7 +138,8 @@ export default function Home() {
         characterId: editingChar._id,
         name: editName,
         description: editDesc,
-        isPublic: editIsPublic
+        isPublic: editIsPublic,
+        imageUrl: editImageUrl
       });
       setEditingChar(null);
     } catch (e) {
@@ -277,6 +279,7 @@ export default function Home() {
                 onClick={() => {
                   setEditName(char.name);
                   setEditDesc(char.description);
+                  setEditImageUrl(char.imageUrl || "");
                   setEditIsPublic(char.isPublic !== false);
                   setEditingChar(char);
                   setSelectedChar(null);
@@ -330,6 +333,16 @@ export default function Home() {
                   onChange={(e) => setEditDesc(e.target.value)}
                   className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
                   required
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">آدرس تصویر (URL)</label>
+                <input 
+                  type="text"
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base transition-colors"
                 />
               </div>
               <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl p-4">
