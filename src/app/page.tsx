@@ -190,7 +190,7 @@ export default function Home() {
         <div className="relative w-full max-w-md mx-auto bg-cosmic-dark border-t border-cosmic-border h-[60vh] mt-auto rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-dana font-bold">اعلان‌ها</h2>
-            <button onClick={() => setShowNotifications(false)} className="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-1">
+            <button onClick={() => { triggerHaptic('light'); setShowNotifications(false); }} className="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -239,11 +239,11 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="p-4 flex-none">
             <button 
-              onClick={() => setSelectedChar(null)}
-              className="flex items-center text-zinc-400 hover:text-white transition-colors"
+              onClick={() => { triggerHaptic('light'); setSelectedChar(null); }}
+              className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
             >
-              <ChevronLeft className="w-5 h-5 ml-1" />
-              <span className="font-dana font-medium">بازگشت</span>
+              <ChevronLeft className="w-6 h-6 ml-1" />
+              <span className="font-dana font-medium text-lg">بازگشت</span>
             </button>
           </div>
           
@@ -304,8 +304,8 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="p-4 flex-none border-b border-cosmic-border/30">
             <button 
-              onClick={() => setEditingChar(null)}
-              className="flex items-center text-zinc-400 hover:text-white transition-colors"
+              onClick={() => { triggerHaptic('light'); setEditingChar(null); }}
+              className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
             >
               <ChevronLeft className="w-6 h-6 ml-1" />
               <span className="font-dana font-medium text-lg">بازگشت</span>
@@ -319,7 +319,7 @@ export default function Home() {
                 <input 
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base transition-colors"
                   required
                 />
               </div>
@@ -328,7 +328,7 @@ export default function Home() {
                 <textarea 
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[100px] text-base"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
                   required
                 />
               </div>
@@ -363,17 +363,17 @@ export default function Home() {
           {/* Top Bar */}
           <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
             <div className="flex-1 relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
               <input 
                 type="text" 
                 placeholder="جستجو در شبکه..." 
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-2 pr-10 pl-4 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-full py-3 pr-11 pl-4 text-base focus:outline-none focus:border-zinc-600 transition-colors"
               />
             </div>
-            <button onClick={() => setShowNotifications(true)} className="p-2 -ml-2 text-zinc-400 hover:text-white relative">
+            <button onClick={() => { triggerHaptic('light'); setShowNotifications(true); }} className="p-3 -ml-2 text-zinc-400 hover:text-white relative min-w-[44px] min-h-[44px] flex items-center justify-center">
               <Bell className="w-6 h-6" />
               {liveNotifications.length > 0 && (
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-lime rounded-full border-2 border-background animate-pulse"></span>
+                <span className="absolute top-2 right-2 w-3 h-3 bg-brand-lime rounded-full border-2 border-background animate-pulse"></span>
               )}
             </button>
           </header>
@@ -672,8 +672,8 @@ export default function Home() {
           <div className="flex flex-col h-screen bg-cosmic-bg animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="p-4 flex-none border-b border-cosmic-border/30">
               <button 
-                onClick={() => setShowHistory(false)}
-                className="flex items-center text-zinc-400 hover:text-white transition-colors"
+                onClick={() => { triggerHaptic('light'); setShowHistory(false); }}
+                className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
               >
                 <ChevronLeft className="w-6 h-6 ml-1" />
                 <span className="font-dana font-medium text-lg">بازگشت</span>
@@ -734,11 +734,11 @@ export default function Home() {
                   value={editUsername} 
                   onChange={(e) => setEditUsername(e.target.value)} 
                   placeholder="نام کاربری جدید"
-                  className="bg-zinc-800 text-center text-white border border-brand-lime/50 rounded-lg py-2 focus:outline-none focus:border-brand-lime"
+                  className="bg-zinc-800 text-center text-white border border-brand-lime/50 rounded-lg py-3 text-base focus:outline-none focus:border-brand-lime transition-colors"
                 />
-                <div className="flex gap-2">
-                  <button type="submit" className="flex-1 bg-brand-lime text-black rounded-lg py-1.5 font-bold text-sm">ذخیره</button>
-                  <button type="button" onClick={() => setIsEditingProfile(false)} className="flex-1 bg-zinc-700 text-white rounded-lg py-1.5 font-bold text-sm">لغو</button>
+                <div className="flex gap-3 mt-2">
+                  <button type="submit" className="flex-1 bg-brand-lime text-black rounded-lg py-3 font-bold text-base active:scale-95 transition-transform">ذخیره</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setIsEditingProfile(false); }} className="flex-1 bg-zinc-700 text-white rounded-lg py-3 font-bold text-base active:scale-95 transition-transform">لغو</button>
                 </div>
               </form>
             ) : (
@@ -752,8 +752,8 @@ export default function Home() {
                       {user?.username ? `@${user.username}` : telegramId}
                     </div>
                     {user && (
-                      <button onClick={() => { setEditUsername(user.username || ""); setIsEditingProfile(true); }} className="text-zinc-500 hover:text-white p-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      <button onClick={() => { triggerHaptic('light'); setEditUsername(user.username || ""); setIsEditingProfile(true); }} className="text-zinc-500 hover:text-white p-3 -m-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                       </button>
                     )}
                   </div>
@@ -787,9 +787,9 @@ export default function Home() {
               </div>
             </div>
 
-            <button onClick={() => setShowHistory(true)} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-colors">
-              <span className="text-sm">تاریخچه چت‌ها</span>
-              <ChevronLeft className="w-4 h-4 text-zinc-500" />
+            <button onClick={() => { triggerHaptic('light'); setShowHistory(true); }} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-all active:scale-[0.98]">
+              <span className="text-sm font-medium">تاریخچه چت‌ها</span>
+              <ChevronLeft className="w-5 h-5 text-zinc-500" />
             </button>
             
           </div>
