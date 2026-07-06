@@ -229,7 +229,7 @@ export default function Home() {
     return (
       <div className="fixed inset-0 z-[100] flex">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowNotifications(false)} />
-        <div className="relative w-full max-w-md mx-auto bg-cosmic-dark border-t border-cosmic-border h-[60vh] mt-auto rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300 flex flex-col">
+        <div className="relative w-full max-w-md mx-auto bg-cosmic-dark border-t border-cosmic-border h-[60vh] mt-auto rounded-t-3xl px-[15px] py-6 animate-in slide-in-from-bottom duration-300 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-dana font-bold">اعلان‌ها</h2>
             <button onClick={() => { triggerHaptic('light'); setShowNotifications(false); }} className="text-zinc-400 hover:text-white bg-zinc-800 rounded-full p-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform">
@@ -238,7 +238,7 @@ export default function Home() {
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
             {liveNotifications.map(notif => (
-              <div key={notif.id} className="p-4 rounded-xl border border-cosmic-border bg-cosmic-surface">
+              <div key={notif.id} className="px-[15px] py-4 rounded-xl border border-cosmic-border bg-cosmic-surface">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`w-2 h-2 rounded-full ${notif.type === 'success' ? 'bg-brand-lime' : 'bg-brand-blue'}`}></span>
                   <span className={`text-xs font-dana font-bold ${notif.type === 'success' ? 'text-brand-lime' : 'text-brand-blue'}`}>{notif.title}</span>
@@ -258,7 +258,7 @@ export default function Home() {
     // Neural Loading Skeleton Overlay
     if (isNavigating) {
       return (
-        <div className="p-4 min-h-[80vh] flex flex-col items-center justify-center animate-in fade-in duration-300">
+        <div className="px-[15px] py-4 min-h-[80vh] flex flex-col items-center justify-center animate-in fade-in duration-300">
           <div className="w-28 h-28 rounded-full shimmer mb-6 border border-cosmic-border"></div>
           <div className="h-6 w-48 shimmer rounded-md mb-3"></div>
           <div className="h-4 w-32 shimmer rounded-md mb-8"></div>
@@ -279,7 +279,7 @@ export default function Home() {
 
       return (
         <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="p-4 flex-none">
+          <div className="px-[15px] py-4 flex-none">
             <button 
               onClick={() => { triggerHaptic('light'); setSelectedChar(null); }}
               className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
@@ -289,7 +289,7 @@ export default function Home() {
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col items-center text-center">
+          <div className="flex-1 overflow-y-auto px-[15px] py-4 flex flex-col items-center text-center">
             <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-cosmic-border mb-4 bg-zinc-800 shrink-0">
               {char.imageUrl ? (
                 <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover" />
@@ -313,7 +313,7 @@ export default function Home() {
           </div>
 
           
-          <div className="px-6 pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] flex-none bg-cosmic-bg border-t border-cosmic-border/50 flex gap-3">
+          <div className="px-[15px] pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] flex-none bg-cosmic-bg border-t border-cosmic-border/50 flex gap-3">
             {(char.creatorId === telegramId && telegramId !== "unknown") && (
               <button 
                 onClick={() => {
@@ -345,7 +345,7 @@ export default function Home() {
     if (editingChar !== null) {
       return (
         <div className="fixed inset-0 z-[100] bg-cosmic-bg max-w-md mx-auto flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="p-4 flex-none border-b border-cosmic-border/30">
+          <div className="px-[15px] py-4 flex-none border-b border-cosmic-border/30">
             <button 
               onClick={() => { triggerHaptic('light'); setEditingChar(null); }}
               className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
@@ -354,7 +354,7 @@ export default function Home() {
               <span className="font-dana font-medium text-lg">بازگشت</span>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto px-[15px] py-6">
             <h2 className="text-xl font-dana font-bold mb-6">ویرایش شخصیت</h2>
             <form onSubmit={handleUpdateCharacter} className="space-y-4">
               
@@ -389,7 +389,7 @@ export default function Home() {
                 <input 
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime text-base transition-colors"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime text-base transition-colors"
                   required
                 />
               </div>
@@ -398,11 +398,11 @@ export default function Home() {
                 <textarea 
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
-                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
                   required
                 />
               </div>
-              <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl p-4">
+              <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4">
                 <span className="text-sm">نمایش عمومی (Public)</span>
                 <button 
                   type="button"
@@ -431,7 +431,7 @@ export default function Home() {
       return (
         <div className="pb-6">
           {/* Top Bar */}
-          <header className="flex items-center gap-3 p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+          <header className="flex items-center gap-3 px-[15px] py-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
             <div className="flex-1 relative">
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
               <input 
@@ -456,7 +456,7 @@ export default function Home() {
               <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-[15px] px-[15px]">
                 {forYouCharacters === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 shimmer">
+                    <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl px-[15px] py-4 flex gap-4 shimmer">
                       <div className="w-20 h-20 rounded-xl bg-zinc-800/50 shrink-0" />
                       <div className="flex-1 space-y-3 py-1">
                         <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
@@ -472,7 +472,7 @@ export default function Home() {
                     <div 
                       key={char._id} 
                       onClick={() => handleCharClick(char)}
-                      className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                      className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl px-[15px] py-4 flex gap-4 cursor-pointer hover:bg-zinc-800/50 transition-colors"
                     >
                       <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
                         {char.imageUrl ? (
@@ -502,7 +502,7 @@ export default function Home() {
 
             {/* Banner Ad / Premium CTA */}
             <section>
-              <div className="bg-brand-blue rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
+              <div className="bg-brand-blue rounded-2xl px-[15px] py-4 flex items-center justify-between cursor-pointer shadow-lg shadow-brand-blue/20">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                     <span className="text-white font-dana font-bold text-xs">P</span>
@@ -608,12 +608,12 @@ export default function Home() {
                   value={createPrompt}
                   onChange={(e) => setCreatePrompt(e.target.value)}
                   placeholder="مثلاً: یک فیلسوف بدبین که با طنز تلخ به سوالات جواب می‌دهد و به سبک قرن ۱۹ حرف می‌زند..."
-                  className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl p-4 text-white focus:outline-none focus:border-brand-lime focus:ring-1 focus:ring-brand-lime/50 min-h-[160px] placeholder:text-zinc-600 resize-none leading-relaxed text-base transition-all"
+                  className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime focus:ring-1 focus:ring-brand-lime/50 min-h-[160px] placeholder:text-zinc-600 resize-none leading-relaxed text-base transition-all"
                   required
                 />
               </div>
               
-              <div className="flex items-center justify-between bg-cosmic-surface border border-cosmic-border rounded-xl p-4 transition-all">
+              <div className="flex items-center justify-between bg-cosmic-surface border border-cosmic-border rounded-xl px-[15px] py-4 transition-all">
                 <div>
                   <span className="block text-sm font-medium text-white">شخصیت عمومی باشد؟</span>
                   <span className="block text-xs text-zinc-500 mt-1">امکان استفاده توسط سایر کاربران</span>
@@ -740,7 +740,7 @@ export default function Home() {
       if (showHistory) {
         return (
           <div className="flex flex-col h-screen bg-cosmic-bg animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="p-4 flex-none border-b border-cosmic-border/30">
+            <div className="px-[15px] py-4 flex-none border-b border-cosmic-border/30">
               <button 
                 onClick={() => { triggerHaptic('light'); setShowHistory(false); }}
                 className="flex items-center text-zinc-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2 active:scale-95"
@@ -749,7 +749,7 @@ export default function Home() {
                 <span className="font-dana font-medium text-lg">بازگشت</span>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto px-[15px] py-4">
               <h2 className="text-xl font-dana font-bold mb-6">تاریخچه چت‌ها</h2>
               {!history ? (
                 <div className="space-y-3">
@@ -762,7 +762,7 @@ export default function Home() {
                   {(history || []).map((conv: any) => {
                      const char = characters.find((c: any) => c._id === conv.characterId);
                      return (
-                       <div key={conv._id} className="bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex items-center justify-between">
+                       <div key={conv._id} className="bg-cosmic-card border border-cosmic-border rounded-xl px-[15px] py-4 flex items-center justify-between">
                          <div className="flex items-center gap-3">
                            <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden shrink-0">
                               {char?.imageUrl ? <img src={char.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">{char?.name?.charAt(0) || '?'}</div>}
@@ -784,12 +784,12 @@ export default function Home() {
       }
 
       return (
-        <div className="p-4 animate-in fade-in duration-300">
+        <div className="px-[15px] py-4 animate-in fade-in duration-300">
           <header className="mb-6 mt-2">
             <h1 className="text-xl font-dana font-bold tracking-tight">حساب کاربری</h1>
           </header>
 
-          <div className="bg-cosmic-card border border-cosmic-border rounded-xl p-6 text-center mb-6 relative overflow-hidden">
+          <div className="bg-cosmic-card border border-cosmic-border rounded-xl px-[15px] py-6 text-center mb-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-brand-lime"></div>
                         {isEditingProfile ? (
               <form onSubmit={async (e) => {
@@ -842,7 +842,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-3">
-            <div className="w-full bg-cosmic-surface border border-brand-lime/20 rounded-xl p-4 flex justify-between items-center relative overflow-hidden">
+            <div className="w-full bg-cosmic-surface border border-brand-lime/20 rounded-xl px-[15px] py-4 flex justify-between items-center relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 w-1 bg-brand-lime"></div>
               <div className="flex flex-col text-right">
                 <span className="font-dana font-bold text-brand-lime text-sm">وضعیت شبکه‌سازی</span>
@@ -857,7 +857,7 @@ export default function Home() {
               </div>
             </div>
 
-            <button onClick={() => { triggerHaptic('light'); setShowHistory(true); }} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl p-4 flex justify-between items-center hover:bg-zinc-800 transition-all active:scale-[0.98]">
+            <button onClick={() => { triggerHaptic('light'); setShowHistory(true); }} className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-[15px] py-4 flex justify-between items-center hover:bg-zinc-800 transition-all active:scale-[0.98]">
               <span className="text-sm font-medium">تاریخچه چت‌ها</span>
               <ChevronLeft className="w-5 h-5 text-zinc-500" />
             </button>
@@ -880,7 +880,7 @@ export default function Home() {
       {/* Bottom Navigation */}
       {selectedChar === null && !isNavigating && (
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-cosmic-border z-50 pb-[env(safe-area-inset-bottom)] pt-1">
-          <div className="flex justify-around items-center h-16 px-6">
+          <div className="flex justify-around items-center h-16 px-[15px]">
             <button 
               onClick={() => { triggerHaptic('light'); setActiveTab("characters"); }}
               className={`flex flex-col items-center gap-1 transition-all active:scale-90 ${activeTab === "characters" ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
