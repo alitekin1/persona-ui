@@ -429,7 +429,7 @@ export default function Home() {
       const trending = characters.slice(0, 10);
 
       return (
-        <div className="pb-6">
+        <div className="pb-6 px-[15px]">
           {/* Top Bar */}
           <header className="flex items-center gap-3 px-[15px] py-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
             <div className="flex-1 relative">
@@ -593,7 +593,7 @@ export default function Home() {
       return (
         <div className="h-[calc(100dvh-4.5rem)] overflow-y-auto snap-y snap-mandatory no-scrollbar animate-in fade-in duration-300 mx-[15px] pb-4">
           {/* Section 1: Character Building Area */}
-          <div className="min-h-full snap-start flex flex-col justify-center pb-12 pt-4 relative px-[15px]">
+          <div className="min-h-full snap-start flex flex-col justify-center pb-12 pt-4 relative">
             <header className="mb-8 mt-2">
               <h1 className="text-2xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
               <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
