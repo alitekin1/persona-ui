@@ -324,7 +324,7 @@ export default function Home() {
                   setEditingChar(char);
                   setSelectedChar(null);
                 }}
-                className="bg-zinc-800 text-white font-dana font-bold py-3.5 px-4 rounded-xl flex items-center justify-center hover:bg-zinc-700 transition-colors active:scale-95 shrink-0"
+                className="bg-zinc-800 text-white font-dana font-bold py-3.5 px-[15px] rounded-xl flex items-center justify-center hover:bg-zinc-700 transition-colors active:scale-95 shrink-0"
               >
                 ویرایش
               </button>
@@ -448,12 +448,12 @@ export default function Home() {
             </button>
           </header>
 
-          <div className="space-y-8 mt-2 px-4">
+          <div className="space-y-8 mt-2 px-[15px]">
             {/* For You Section (Uses Algorithm from DB) */}
             <section>
               <h2 className="text-lg font-dana font-bold mb-1">برای شما</h2>
               <p className="text-xs text-zinc-400 mb-3 leading-relaxed">شخصیت‌ها دستیارهای مستقلی هستند که می‌توانید با آن‌ها گفتگو کنید.</p>
-              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-4 px-4">
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 pb-2 -mx-[15px] px-[15px]">
                 {forYouCharacters === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="snap-start shrink-0 w-[85%] bg-cosmic-card border border-cosmic-border rounded-2xl p-4 flex gap-4 shimmer">
@@ -509,7 +509,7 @@ export default function Home() {
                   </div>
                   <span className="text-white font-dana font-semibold text-sm">چت‌های بدون محدودیت</span>
                 </div>
-                <button className="bg-white text-brand-blue px-4 py-1.5 rounded-full text-sm font-dana font-bold">
+                <button className="bg-white text-brand-blue px-[15px] py-1.5 rounded-full text-sm font-dana font-bold">
                   تهیه اشتراک
                 </button>
               </div>
@@ -519,7 +519,7 @@ export default function Home() {
             <section>
               <h2 className="text-lg font-dana font-bold mb-1">صحنه‌ها</h2>
               <p className="text-xs text-zinc-400 mb-3 leading-relaxed">صحنه‌ها فضاهای پیش‌فرضی برای شروع یک مکالمه خاص (مثل مصاحبه یا تمرین زبان) هستند.</p>
-              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-4 px-4">
+              <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 pb-2 -mx-[15px] px-[15px]">
                 {charactersResult === undefined ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="snap-start shrink-0 w-[140px] h-[200px] rounded-2xl shimmer border border-cosmic-border" />
@@ -591,9 +591,9 @@ export default function Home() {
 
     if (activeTab === "create") {
       return (
-        <div className="h-[calc(100dvh-4.5rem)] overflow-y-auto snap-y snap-mandatory no-scrollbar animate-in fade-in duration-300 -mx-4 px-4 pb-4">
+        <div className="h-[calc(100dvh-4.5rem)] overflow-y-auto snap-y snap-mandatory no-scrollbar animate-in fade-in duration-300 mx-[15px] pb-4">
           {/* Section 1: Character Building Area */}
-          <div className="min-h-full snap-start flex flex-col justify-center pb-12 pt-4 relative">
+          <div className="min-h-full snap-start flex flex-col justify-center pb-12 pt-4 relative px-[15px]">
             <header className="mb-8 mt-2">
               <h1 className="text-2xl font-dana font-bold tracking-tight">ساخت شخصیت جدید</h1>
               <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
