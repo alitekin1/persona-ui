@@ -8,6 +8,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("characters");
   const [selectedChar, setSelectedChar] = useState<any | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [onboardName, setOnboardName] = useState("");
+  const [isSubmittingName, setIsSubmittingName] = useState(false);
   
   // Navigation states
   const [showNotifications, setShowNotifications] = useState(false);
@@ -867,6 +869,53 @@ export default function Home() {
       );
     }
   };
+
+  if (user && !user.name) {
+    return (
+      <div className="min-h-[100dvh] relative max-w-md mx-auto border-x border-cosmic-border/30 bg-background flex flex-col justify-center items-center px-6">
+        <div className="text-center w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="w-16 h-16 bg-brand-lime/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <User className="w-8 h-8 text-brand-lime" />
+          </div>
+          <h1 className="text-2xl font-dana font-bold mb-4">سلام! 👋</h1>
+          <p className="text-zinc-400 mb-8 leading-relaxed text-sm">
+            قبل از هر چیز باید بدونی که تو این کمپانی هیچ‌کس، مطلقاً هیچ‌کس، به چت‌های تو با هوش مصنوعی دسترسی نداره و حریم خصوصی تو کاملاً حفظ میشه. 🔒
+            <br/><br/>
+            حالا لطفاً اسمت رو برام بنویس تا بیشتر با هم آشنا بشیم:
+          </p>
+          
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            if (onboardName.trim().length >= 2) {
+              setIsSubmittingName(true);
+              try {
+                await updateUserProfile({ telegramId, name: onboardName.trim() });
+              } finally {
+                setIsSubmittingName(false);
+              }
+            }
+          }} className="space-y-4 w-full">
+            <input 
+              type="text" 
+              value={onboardName}
+              onChange={(e) => setOnboardName(e.target.value)}
+              placeholder="نام شما..."
+              className="w-full bg-cosmic-surface border border-cosmic-border rounded-xl px-4 py-4 text-center text-white focus:outline-none focus:border-brand-lime transition-all"
+              required
+              minLength={2}
+            />
+            <button 
+              type="submit" 
+              disabled={isSubmittingName || onboardName.trim().length < 2}
+              className="w-full bg-brand-lime text-black font-bold py-4 rounded-xl disabled:opacity-50 transition-all active:scale-95"
+            >
+              {isSubmittingName ? 'در حال ثبت...' : 'شروع کنیم'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] relative max-w-md mx-auto border-x border-cosmic-border/30 bg-background pt-[env(safe-area-inset-top)]">
