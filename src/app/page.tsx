@@ -716,14 +716,24 @@ export default function Home() {
                                  </div>
                               </div>
                             )}
-                            
+
+                            {char.status === "failed" && (
+                              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-3 text-center">
+                                <X className="w-9 h-9 text-red-500 mb-3" />
+                                <span className="text-xs text-red-400 font-dana font-bold">ساخت ناموفق بود</span>
+                                <span className="text-[10px] text-zinc-400 mt-2 line-clamp-2">{char.description || "لطفاً دوباره تلاش کنید."}</span>
+                              </div>
+                            )}
+
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
                             
                             <div className="absolute bottom-3 left-3 right-3 text-center">
                                <h3 className="font-dana font-bold text-sm text-white truncate drop-shadow-md">
-                                 {char.status === "generating" ? "در حال ساخت..." : char.name}
+                                 {char.status === "generating" ? "در حال ساخت..." : char.status === "failed" ? "خطا در ساخت" : char.name}
                                </h3>
-                               {char.status !== "generating" && (
+                               {char.status === "failed" ? (
+                                 <p className="text-[10px] text-red-400 mt-1 truncate">ساخت ناموفق</p>
+                               ) : char.status !== "generating" && (
                                  <p className="text-[10px] text-zinc-400 mt-1 truncate">{char.isPublic ? 'عمومی' : 'خصوصی'}</p>
                                )}
                             </div>
