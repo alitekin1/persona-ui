@@ -49,6 +49,7 @@ export default function Home() {
   const [editingChar, setEditingChar] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editSystemPrompt, setEditSystemPrompt] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -174,12 +175,13 @@ export default function Home() {
 
   const handleUpdateCharacter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingChar || !editName || !editDesc) return;
+    if (!editingChar || !editName.trim() || !editDesc.trim() || !editSystemPrompt.trim()) return;
     try {
       await updateCharacter({
         characterId: editingChar._id,
-        name: editName,
-        description: editDesc,
+        name: editName.trim(),
+        description: editDesc.trim(),
+        systemPrompt: editSystemPrompt,
         isPublic: editIsPublic,
         imageUrl: editImageUrl
       });
@@ -321,6 +323,7 @@ export default function Home() {
                 onClick={() => {
                   setEditName(char.name);
                   setEditDesc(char.description);
+                  setEditSystemPrompt(char.systemPrompt || "");
                   setEditImageUrl(char.imageUrl || "");
                   setEditIsPublic(char.isPublic !== false);
                   setEditingChar(char);
@@ -397,12 +400,23 @@ export default function Home() {
               </div>
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">توضیحات کوتاه</label>
-                <textarea 
+                <textarea
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
                   className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-2">پرامپت شخصیت</label>
+                <textarea
+                  value={editSystemPrompt}
+                  onChange={(e) => setEditSystemPrompt(e.target.value)}
+                  className="w-full bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime min-h-[220px] text-sm leading-6 resize-y transition-colors ltr text-left"
+                  placeholder="دستور رفتاری و شخصیتی کاراکتر را اینجا ویرایش کنید"
+                  required
+                />
+                <p className="text-xs text-zinc-500 mt-2">این فیلد رفتار و شخصیت کاراکتر را کنترل می‌کند و با توضیح کوتاه متفاوت است.</p>
               </div>
               <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4">
                 <span className="text-sm">نمایش عمومی (Public)</span>
@@ -414,9 +428,10 @@ export default function Home() {
                   <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${editIsPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
                 </button>
               </div>
-              <button 
+              <button
                 type="submit"
-                className="w-full bg-brand-lime text-black font-dana font-bold py-4 rounded-xl mt-6 active:scale-95 transition-transform"
+                disabled={!editName.trim() || !editDesc.trim() || !editSystemPrompt.trim()}
+                className="w-full bg-brand-lime disabled:bg-zinc-700 disabled:text-zinc-400 text-black font-dana font-bold py-4 rounded-xl mt-6 active:scale-95 transition-transform disabled:active:scale-100"
               >
                 ذخیره تغییرات
               </button>
