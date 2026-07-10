@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, ChevronDown, Menu, Bell, MessageCircle, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, ChevronDown, Bell, MessageCircle, X } from "lucide-react";
 import { useQuery, useMutation, useAction } from "convex/react";
+
+type LiveNotification = {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  type: "system" | "success";
+};
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("characters");
@@ -13,9 +21,10 @@ export default function Home() {
   
   // Navigation states
   const [showNotifications, setShowNotifications] = useState(false);
-  const [liveNotifications, setLiveNotifications] = useState<any[]>([
+  const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([
     { id: 1, title: 'سیستم', message: 'به شبکه آنیما خوش آمدید! پروفایل شما ساخته شد.', time: 'لحظاتی پیش', type: 'system' }
   ]);
+  const refinementStatusRef = useRef<Record<string, string | undefined>>({});
   
   // Create form states
   const [createPrompt, setCreatePrompt] = useState("");
@@ -45,6 +54,7 @@ export default function Home() {
   const updateCharacter = useMutation("characters:updateCharacter" as any);
   const generateUploadUrl = useMutation("characters:generateUploadUrl" as any);
   const getUploadUrl = useMutation("characters:getUploadUrl" as any);
+  const triggerRefinement = useAction("actions/agent:triggerRefinement" as any);
   
   const [editingChar, setEditingChar] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
@@ -52,6 +62,8 @@ export default function Home() {
   const [editSystemPrompt, setEditSystemPrompt] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(true);
+  const [editInstruction, setEditInstruction] = useState("");
+  const [isSubmittingRefinement, setIsSubmittingRefinement] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   
   const triggerHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' = 'light') => {
@@ -120,7 +132,7 @@ export default function Home() {
             WebApp.setHeaderColor('#09090b');
             WebApp.setBackgroundColor('#09090b');
           } catch(e) {}
-          
+
           const user = WebApp.initDataUnsafe?.user;
           if (user?.id) {
             setTelegramId(user.id.toString());
@@ -130,7 +142,46 @@ export default function Home() {
     }
   }, []);
 
-  
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const nextStatuses: Record<string, string | undefined> = {};
+    const notifications: LiveNotification[] = [];
+
+    for (const char of myCharacters) {
+      const id = String(char._id);
+      const previous = refinementStatusRef.current[id];
+      nextStatuses[id] = char.refinementStatus;
+
+      if (previous === "running" && char.refinementStatus === "completed") {
+        notifications.push({
+          id: Date.now() + notifications.length,
+          title: 'ریفاینر',
+          message: `ویرایش «${char.name}» کامل شد و نسخه جدید آماده است.`,
+          time: 'همین حالا',
+          type: 'success'
+        });
+        triggerHaptic('success');
+      }
+
+      if (previous === "running" && char.refinementStatus === "failed") {
+        notifications.push({
+          id: Date.now() + notifications.length,
+          title: 'ریفاینر',
+          message: `ویرایش «${char.name}» ناموفق بود.`,
+          time: 'همین حالا',
+          type: 'system'
+        });
+        triggerHaptic('error');
+      }
+    }
+
+    refinementStatusRef.current = nextStatuses;
+    if (notifications.length > 0) {
+      setLiveNotifications((prev) => [...notifications, ...prev]);
+    }
+  }, [myCharacters]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const handleCreateCharacter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createPrompt || isSubmitting) return;
@@ -173,8 +224,8 @@ export default function Home() {
     }
   };
 
-  const handleUpdateCharacter = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateCharacter = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
     if (!editingChar || !editName.trim() || !editDesc.trim() || !editSystemPrompt.trim()) return;
     try {
       await updateCharacter({
@@ -189,6 +240,48 @@ export default function Home() {
     } catch (e) {
       console.error(e);
       alert("خطا در ذخیره تغییرات.");
+    }
+  };
+
+  const handleRefineCharacter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingChar || !editInstruction.trim() || isSubmittingRefinement) return;
+
+    if (!editingChar.agentGoRunId) {
+      alert("این شخصیت شناسه اجرای Agent-Go ندارد و با ریفاینر قابل ویرایش خودکار نیست.");
+      triggerHaptic('warning');
+      return;
+    }
+
+    setIsSubmittingRefinement(true);
+    triggerHaptic('medium');
+
+    try {
+      await triggerRefinement({
+        characterId: editingChar._id,
+        creatorId: telegramId !== "unknown" ? telegramId : "guest",
+        instruction: editInstruction.trim(),
+      });
+
+      setLiveNotifications((prev) => [
+        {
+          id: Date.now(),
+          title: 'ریفاینر',
+          message: `درخواست ویرایش «${editingChar.name}» در پس‌زمینه شروع شد. بعد از اتمام اطلاع می‌دهیم.`,
+          time: 'همین حالا',
+          type: 'system'
+        },
+        ...prev,
+      ]);
+      setEditInstruction("");
+      setEditingChar(null);
+      triggerHaptic('success');
+    } catch (error) {
+      console.error(error);
+      alert(error instanceof Error ? error.message : "خطا در شروع ویرایش هوشمند.");
+      triggerHaptic('error');
+    } finally {
+      setIsSubmittingRefinement(false);
     }
   };
 
@@ -326,6 +419,7 @@ export default function Home() {
                   setEditSystemPrompt(char.systemPrompt || "");
                   setEditImageUrl(char.imageUrl || "");
                   setEditIsPublic(char.isPublic !== false);
+                  setEditInstruction("");
                   setEditingChar(char);
                   setSelectedChar(null);
                 }}
@@ -359,10 +453,51 @@ export default function Home() {
               <span className="font-dana font-medium text-lg">بازگشت</span>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-[15px] py-6">
-            <h2 className="text-xl font-dana font-bold mb-6">ویرایش شخصیت</h2>
-            <form onSubmit={handleUpdateCharacter} className="space-y-4">
-              
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="flex-1 overflow-y-auto px-[15px] py-6 space-y-4">
+              <h2 className="text-xl font-dana font-bold">ویرایش شخصیت</h2>
+
+              <form onSubmit={handleRefineCharacter} className="rounded-2xl border border-brand-lime/25 bg-brand-lime/5 px-[15px] py-4 space-y-3">
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <label className="block text-sm text-brand-lime font-dana font-bold">ویرایش هوشمند با Refiner</label>
+                    {editingChar.refinementStatus === "running" && (
+                      <span className="text-[10px] text-brand-lime font-mono animate-pulse">در حال پردازش...</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    فقط بگویید چه تغییری می‌خواهید؛ ریفاینر در پس‌زمینه پرامپت شخصیت را بازنویسی می‌کند و بعد از اتمام اطلاع می‌دهد.
+                  </p>
+                </div>
+                <textarea
+                  value={editInstruction}
+                  onChange={(e) => setEditInstruction(e.target.value)}
+                  className="w-full bg-zinc-900/80 border border-cosmic-border rounded-xl px-[15px] py-4 text-white focus:outline-none focus:border-brand-lime min-h-[120px] text-base resize-none transition-colors"
+                  placeholder="مثلاً: این شخصیت را بامزه‌تر و پرانرژی‌تر کن، اما هویت اصلی و محدودیت‌های ایمنی را حفظ کن."
+                  disabled={isSubmittingRefinement || editingChar.refinementStatus === "running"}
+                />
+                {editingChar.refinementStatus === "failed" && editingChar.refinementError && (
+                  <p className="text-xs text-red-400 leading-relaxed">آخرین ویرایش ناموفق بود: {editingChar.refinementError}</p>
+                )}
+                {editingChar.refinementStatus === "completed" && editingChar.refinementSummary && (
+                  <p className="text-xs text-brand-lime/90 leading-relaxed">آخرین ویرایش: {editingChar.refinementSummary}</p>
+                )}
+                {!editingChar.agentGoRunId && (
+                  <p className="text-xs text-amber-300 leading-relaxed">این شخصیت هنوز شناسه Agent-Go ندارد؛ فعلاً فقط ذخیره دستی در دسترس است.</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={!editInstruction.trim() || isSubmittingRefinement || editingChar.refinementStatus === "running" || !editingChar.agentGoRunId}
+                  className="w-full bg-brand-lime disabled:bg-zinc-700 disabled:text-zinc-400 text-black font-dana font-bold py-4 rounded-xl active:scale-95 transition-transform disabled:active:scale-100"
+                >
+                  {isSubmittingRefinement || editingChar.refinementStatus === "running" ? 'در حال شروع ویرایش...' : 'شروع ویرایش در پس‌زمینه'}
+                </button>
+              </form>
+
+              <div className="border-t border-cosmic-border/40 pt-4">
+                <p className="text-xs text-zinc-500 leading-relaxed">برای تغییرات سریع مثل نام، توضیح یا تصویر می‌توانید از فیلدهای دستی زیر استفاده کنید.</p>
+              </div>
+
               {/* Image Upload Section at Top */}
               <div className="flex flex-col items-center mb-6">
                 <div className="relative w-24 h-24 mb-3">
@@ -420,7 +555,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between bg-zinc-800/50 border border-cosmic-border rounded-xl px-[15px] py-4">
                 <span className="text-sm">نمایش عمومی (Public)</span>
-                <button 
+                <button
                   type="button"
                   onClick={() => setEditIsPublic(!editIsPublic)}
                   className={`w-12 h-6 rounded-full relative transition-colors ${editIsPublic ? 'bg-brand-lime' : 'bg-zinc-600'}`}
@@ -428,14 +563,17 @@ export default function Home() {
                   <div className={`w-4 h-4 rounded-full absolute top-1 transition-all ${editIsPublic ? 'bg-black left-7' : 'bg-white left-1'}`}></div>
                 </button>
               </div>
+            </div>
+            <div className="flex-none border-t border-cosmic-border/50 bg-cosmic-bg px-[15px] pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))]">
               <button
-                type="submit"
+                type="button"
+                onClick={handleUpdateCharacter}
                 disabled={!editName.trim() || !editDesc.trim() || !editSystemPrompt.trim()}
-                className="w-full bg-brand-lime disabled:bg-zinc-700 disabled:text-zinc-400 text-black font-dana font-bold py-4 rounded-xl mt-6 active:scale-95 transition-transform disabled:active:scale-100"
+                className="w-full bg-brand-lime disabled:bg-zinc-700 disabled:text-zinc-400 text-black font-dana font-bold py-4 rounded-xl active:scale-95 transition-transform disabled:active:scale-100"
               >
                 ذخیره تغییرات
               </button>
-            </form>
+            </div>
           </div>
         </div>
       );
