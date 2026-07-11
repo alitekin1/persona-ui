@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, PlusCircle, User, Search, Play, ChevronLeft, ChevronDown, Bell, MessageCircle, X } from "lucide-react";
 import { useQuery, useMutation, useAction } from "convex/react";
+import { getDisplayTags } from "@/lib/character-tags";
 
 type LiveNotification = {
   id: number;
@@ -401,7 +402,7 @@ export default function Home() {
             <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{char.description || char.tagline}</p>
             
             <div className="flex gap-2 justify-center mb-4 flex-wrap">
-              {char.tags?.map((tag: string) => (
+              {getDisplayTags(char.tags).map((tag) => (
                 <span key={tag} className="px-3 py-1 bg-cosmic-surface border border-cosmic-border rounded-full text-xs text-brand-lime">
                   {tag}
                 </span>
